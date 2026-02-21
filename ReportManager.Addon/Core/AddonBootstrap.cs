@@ -37,11 +37,17 @@ namespace ReportManager.Addon.Core
                 "ReportManager",
                 PrincipalScreen.OpenPrincipalMenuId,
                 "Principal");
-            _log.Info("Menú ReportManager > Principal registrado.");
-
+            menuManager.EnsurePopupWithEntry(
+                SapTopMenuId,
+                PrincipalScreen.PopupMenuId,
+                "ReportManager",
+                PrincipalScreen.OpenConfigMenuId,
+                "Configuración");
+            _log.Info("Menú ReportManager registrado (Principal y Configuración).");
 
             var principalFormController = new PrincipalFormController(_sap.App, loader, srfPath, PrincipalScreen.FormUid);
-            var principal = new PrincipalScreen(_sap.App, _log, principalFormController);
+            var configMetadataService = new ReportManager.Addon.Services.ConfigurationMetadataService(_sap.App, _log);
+            var principal = new PrincipalScreen(_sap.App, _log, principalFormController, configMetadataService);
             principal.WireEvents();
 
             _sap.App.StatusBar.SetText("Add-On ReportManager cargado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
