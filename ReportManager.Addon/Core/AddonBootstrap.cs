@@ -1,4 +1,5 @@
-﻿using ReportManager.Addon.Logging;
+﻿using ReportManager.Addon.Entidades;
+using ReportManager.Addon.Logging;
 using ReportManager.Addon.Screens;
 using SAPbouiCOM;
 using System;
@@ -46,7 +47,7 @@ namespace ReportManager.Addon.Core
             _log.Info("Menú ReportManager registrado (Principal y Configuración).");
 
             var principalFormController = new PrincipalFormController(_sap.App, loader, srfPath, PrincipalScreen.FormUid);
-            var configMetadataService = new ReportManager.Addon.Services.ConfigurationMetadataService(_sap.App, _log);
+            var configMetadataService = new ReportManager.Addon.Services.ConfigurationMetadataService(_sap.App, _log, Globals.rCompany);
             var principal = new PrincipalScreen(_sap.App, _log, principalFormController, configMetadataService);
             principal.WireEvents();
 

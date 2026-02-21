@@ -14,11 +14,13 @@ namespace ReportManager.Addon.Services
     {
         private readonly Application _app;
         private readonly Logger _log;
+        private readonly SAPbobsCOM.Company _company;
 
-        public ConfigurationMetadataService(Application app, Logger log)
+        public ConfigurationMetadataService(Application app, Logger log, SAPbobsCOM.Company company)
         {
             _app = app ?? throw new ArgumentNullException(nameof(app));
             _log = log ?? throw new ArgumentNullException(nameof(log));
+            _company = company ?? throw new ArgumentNullException(nameof(company));
         }
 
         public void CreateDepartmentTable()
@@ -56,10 +58,10 @@ namespace ReportManager.Addon.Services
         private void CreateDefinitionStructures()
         {
             CreateUserTableIfNotExists("SS_DFRPTCAB", "Definicion Reporte Cab", BoUTBTableType.bott_MasterData);
-            CreateUserFieldIfNotExists("@SS_DFRPTCAB", "SS_IDDPT", "Id Departamento", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "@SS_DPTS");
+            CreateUserFieldIfNotExists("@SS_DFRPTCAB", "SS_IDDPT", "Id Departamento", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_DPTS");
 
             CreateUserTableIfNotExists("SS_DFRPTDET", "Definicion Reporte Det", BoUTBTableType.bott_MasterDataLines);
-            CreateUserFieldIfNotExists("@SS_DFRPTDET", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "@SS_PRMCAB");
+            CreateUserFieldIfNotExists("@SS_DFRPTDET", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMCAB");
 
             RegisterMasterDataUdoIfNotExists(
                 "SS_DFRPTCAB",
@@ -69,7 +71,7 @@ namespace ReportManager.Addon.Services
                 "U_SS_IDDPT");
         }
 
-        private void CreateUserTableIfNotExists(string tableName, string description, BoUTBTableType type)
+        private void  CreateUserTableIfNotExists(string tableName, string description, BoUTBTableType type)
         {
             UserTablesMD userTables = null;
             Recordset recordset = null;
@@ -78,7 +80,7 @@ namespace ReportManager.Addon.Services
             {
                 var company = GetCompany();
                 recordset = (Recordset)company.GetBusinessObject(BoObjectTypes.BoRecordset);
-                recordset.DoQuery("SELECT TOP 1 1 FROM OUTB WHERE TableName = '" + tableName + "'");
+                recordset.DoQuery($"SELECT TOP 1 1 FROM OUTB WHERE TableName = '" + tableName + "'");
 
                 if (!recordset.EoF)
                 {
@@ -143,7 +145,7 @@ namespace ReportManager.Addon.Services
 
                 if (!string.IsNullOrWhiteSpace(linkedTable))
                 {
-                    fields.LinkedTable = linkedTable;
+                    fields.LinkedTable = linkedTable.TrimStart('@');
                 }
 
                 if (!string.IsNullOrWhiteSpace(validValueYes) && !string.IsNullOrWhiteSpace(validValueNo))

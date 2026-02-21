@@ -79,6 +79,7 @@
     <Compile Include="Core\PrincipalFormController.cs" />
     <Compile Include="Core\SapApplication.cs" />
     <Compile Include="Core\SrfFormLoader.cs" />
+    <Compile Include="Entidades\Globals.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
