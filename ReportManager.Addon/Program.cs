@@ -26,21 +26,18 @@ namespace ReportManager.Addon
 
             try
             {
-                // SAP B1 pasa el connection string en args[0]
                 string connStr = (args != null && args.Length > 0) ? args[0] : null;
 
                 var sap = SapApplication.Connect(connStr);
                 var bootstrap = new AddonBootstrap(sap, log);
                 bootstrap.Start();
 
-                // Mantener vivo el proceso
                 System.Windows.Forms.Application.Run();
             }
             catch (Exception ex)
             {
                 log.Error("Fallo crítico al iniciar el Add-On", ex);
 
-                // Si no hay SAP App, al menos muestra algo
                 try { System.Windows.Forms.MessageBox.Show(ex.ToString(), "Add-On Error"); } catch { }
             }
         }

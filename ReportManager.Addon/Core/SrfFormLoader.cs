@@ -25,9 +25,7 @@ namespace ReportManager.Addon.Core
             var xml = File.ReadAllText(srfPath);
             _app.LoadBatchActions(xml);
 
-            // Si hubo errores en batch
             string result = _app.GetLastBatchResults();
-            // result a veces viene vacío aunque cargue ok, pero si falla suele traer detalles.
         }
     }
 }

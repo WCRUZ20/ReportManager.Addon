@@ -27,7 +27,6 @@ namespace ReportManager.Addon.Logging
             var file = Path.Combine(_logDir, "addon_" + DateTime.Now.ToString("yyyyMMdd") + ".log");
             var line = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " [" + level + "] " + message;
 
-            // Escritura simple (suficiente para empezar)
             File.AppendAllText(file, line + Environment.NewLine, Encoding.UTF8);
         }
     }
