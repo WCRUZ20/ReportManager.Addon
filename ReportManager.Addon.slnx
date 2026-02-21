@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="ReportManager.Addon/ReportManager.Addon.csproj" Id="3a810d9c-28ba-4ebf-b568-8ab09c4a2fb7">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
