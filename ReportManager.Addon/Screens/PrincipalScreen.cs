@@ -60,12 +60,12 @@ namespace ReportManager.Addon.Screens
                     return;
 
                 if (pVal.EventType == BoEventTypes.et_ITEM_PRESSED
-                    && pVal.ItemUID == "btnHello"
+                    && pVal.ItemUID == "btn_exe"
                     && pVal.ActionSuccess)
                 {
                     _app.StatusBar.SetText("Se ha presionado el botón.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
-                    _app.MessageBox("Se ha presionado el botón.");
-                    _log.Info("btnHello presionado en RM_PRINCIPAL");
+                    //_app.MessageBox("Se ha presionado el botón.");
+                    _log.Info("btn_exe presionado en RM_PRINCIPAL");
                 }
             }
             catch (Exception ex)
