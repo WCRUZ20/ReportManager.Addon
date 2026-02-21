@@ -1,4 +1,5 @@
-﻿using SAPbouiCOM;
+﻿using ReportManager.Addon.Entidades;
+using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,25 @@ namespace ReportManager.Addon.Core
             guiApi.Connect(connectionStringFromArgs);
 
             var app = guiApi.GetApplication(-1);
+
+            var company = new SAPbobsCOM.Company();
+            var contextCookie = company.GetContextCookie();
+            var loginContext = app.Company.GetConnectionContext(contextCookie);
+
+            var setContextResult = company.SetSboLoginContext(loginContext);
+            if (setContextResult != 0)
+                throw new InvalidOperationException($"Error SetSboLoginContext: {setContextResult}");
+
+            var connectResult = company.Connect();
+            if (connectResult != 0)
+            {
+                company.GetLastError(out int errorCode, out string errorMessage);
+                throw new InvalidOperationException(
+                    $"Error al conectar DI API. Código: {errorCode}. Mensaje: {errorMessage}"
+                );
+            }
+
+            Globals.rCompany = company;
             return new SapApplication(app);
         }
     }

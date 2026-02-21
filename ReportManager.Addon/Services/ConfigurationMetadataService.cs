@@ -78,8 +78,8 @@ namespace ReportManager.Addon.Services
 
             try
             {
-                var company = GetCompany();
-                recordset = (Recordset)company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                //var company = GetCompany();
+                recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
                 recordset.DoQuery($"SELECT TOP 1 1 FROM OUTB WHERE TableName = '" + tableName + "'");
 
                 if (!recordset.EoF)
@@ -87,7 +87,7 @@ namespace ReportManager.Addon.Services
                     return;
                 }
 
-                userTables = (UserTablesMD)company.GetBusinessObject(BoObjectTypes.oUserTables);
+                userTables = (UserTablesMD)_company.GetBusinessObject(BoObjectTypes.oUserTables);
                 userTables.TableName = tableName;
                 userTables.TableDescription = description;
                 userTables.TableType = type;
@@ -118,8 +118,8 @@ namespace ReportManager.Addon.Services
 
             try
             {
-                var company = GetCompany();
-                recordset = (Recordset)company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                //var company = GetCompany();
+                recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
                 recordset.DoQuery("SELECT TOP 1 1 FROM CUFD WHERE TableID = '" + tableName + "' AND AliasID = '" + fieldName + "'");
 
                 if (!recordset.EoF)
@@ -127,7 +127,7 @@ namespace ReportManager.Addon.Services
                     return;
                 }
 
-                fields = (UserFieldsMD)company.GetBusinessObject(BoObjectTypes.oUserFields);
+                fields = (UserFieldsMD)_company.GetBusinessObject(BoObjectTypes.oUserFields);
                 fields.TableName = tableName;
                 fields.Name = fieldName;
                 fields.Description = description;
@@ -175,8 +175,8 @@ namespace ReportManager.Addon.Services
 
             try
             {
-                var company = GetCompany();
-                recordset = (Recordset)company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                //var company = GetCompany();
+                recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
                 recordset.DoQuery("SELECT TOP 1 1 FROM OUDO WHERE Code = '" + code + "'");
 
                 if (!recordset.EoF)
@@ -184,7 +184,7 @@ namespace ReportManager.Addon.Services
                     return;
                 }
 
-                udo = (UserObjectsMD)company.GetBusinessObject(BoObjectTypes.oUserObjectsMD);
+                udo = (UserObjectsMD)_company.GetBusinessObject(BoObjectTypes.oUserObjectsMD);
                 udo.Code = code;
                 udo.Name = name;
                 udo.ObjectType = BoUDOObjType.boud_MasterData;
@@ -225,8 +225,8 @@ namespace ReportManager.Addon.Services
             var result = businessObject.Add();
             if (result != 0)
             {
-                var company = GetCompany();
-                company.GetLastError(out int errorCode, out string errorDescription);
+                //var company = GetCompany();
+                _company.GetLastError(out int errorCode, out string errorDescription);
                 throw new InvalidOperationException(errorMessage + " SAP(" + errorCode + "): " + errorDescription);
             }
         }
