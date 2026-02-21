@@ -42,16 +42,16 @@ namespace ReportManager.Addon.Services
             CreateUserFieldIfNotExists("@SS_PRMCAB", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50);
             CreateUserFieldIfNotExists("@SS_PRMCAB", "SS_NOMBRPT", "Nombre Reporte", BoFieldTypes.db_Alpha, 50);
 
-            CreateUserTableIfNotExists("SS_PRMCABDET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
-            CreateUserFieldIfNotExists("@SS_PRMCABDET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRMCABDET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRMCABDET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
+            CreateUserTableIfNotExists("SS_PRMDET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
+            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
             RegisterMasterDataUdoIfNotExists(
                 "SS_PRMCAB",
                 "SS_PRMCAB",
                 "Parametrización de reportes",
-                "SS_PRMCABDET",
+                "SS_PRMDET",
                 "U_SS_IDRPT");
         }
 
@@ -86,6 +86,9 @@ namespace ReportManager.Addon.Services
                 {
                     return;
                 }
+
+                ReleaseComObject(recordset);
+                recordset = null;
 
                 userTables = (UserTablesMD)_company.GetBusinessObject(BoObjectTypes.oUserTables);
                 userTables.TableName = tableName;
@@ -126,6 +129,9 @@ namespace ReportManager.Addon.Services
                 {
                     return;
                 }
+
+                ReleaseComObject(recordset);
+                recordset = null;
 
                 fields = (UserFieldsMD)_company.GetBusinessObject(BoObjectTypes.oUserFields);
                 fields.TableName = tableName;
@@ -184,6 +190,9 @@ namespace ReportManager.Addon.Services
                     return;
                 }
 
+                ReleaseComObject(recordset);
+                recordset = null;
+
                 udo = (UserObjectsMD)_company.GetBusinessObject(BoObjectTypes.oUserObjectsMD);
                 udo.Code = code;
                 udo.Name = name;
@@ -215,11 +224,6 @@ namespace ReportManager.Addon.Services
             }
         }
 
-        private SAPbobsCOM.Company GetCompany()
-        {
-            return (SAPbobsCOM.Company)_app.Company.GetDICompany();
-        }
-
         private void AddMetadata(dynamic businessObject, string errorMessage)
         {
             var result = businessObject.Add();
@@ -235,7 +239,7 @@ namespace ReportManager.Addon.Services
         {
             if (obj != null && Marshal.IsComObject(obj))
             {
-                Marshal.ReleaseComObject(obj);
+                Marshal.FinalReleaseComObject(obj);
             }
         }
     }
