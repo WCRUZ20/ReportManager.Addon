@@ -1,4 +1,7 @@
-﻿using ReportManager.Addon.Logging;
+﻿using CrystalDecisions.CrystalReports.Engine;
+using CrystalDecisions.Shared;
+using ReportManager.Addon.Forms;
+using ReportManager.Addon.Logging;
 using SAPbobsCOM;
 using SAPbouiCOM;
 using System;
@@ -98,11 +101,15 @@ namespace ReportManager.Addon.Services
                     return;
                 }
 
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = reportFilePath,
-                    UseShellExecute = true,
-                });
+                var parameterDefinitions = GetReportParameters(reportInfo.ReportCode);
+                var parameterValues = BuildParameterValues(form, parameterDefinitions);
+
+                var reportDocument = new ReportDocument();
+                reportDocument.Load(reportFilePath);
+                ApplyParameters(reportDocument, parameterValues);
+
+                var viewerForm = new CrystalReportViewerForm(reportDocument);
+                viewerForm.Show();
 
                 _app.StatusBar.SetText("Reporte abierto correctamente.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
             }
@@ -142,6 +149,86 @@ namespace ReportManager.Addon.Services
 
             form.Visible = true;
             _mappingFormUid = uid;
+        }
+
+        private Dictionary<string, object> BuildParameterValues(Form mappingForm, List<ReportParameterDefinition> definitions)
+        {
+            var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (mappingForm == null || definitions == null || definitions.Count == 0)
+            {
+                return values;
+            }
+
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                var definition = definitions[i];
+                if (string.IsNullOrWhiteSpace(definition?.ParamId))
+                {
+                    continue;
+                }
+
+                var valueUid = ParametersPrefix + "val_" + i.ToString("00");
+                if (!HasItem(mappingForm, valueUid))
+                {
+                    continue;
+                }
+
+                var parameterValue = GetUiValue(mappingForm, valueUid, definition.Type);
+                if (parameterValue != null)
+                {
+                    values[definition.ParamId] = parameterValue;
+                }
+            }
+
+            return values;
+        }
+
+        private object GetUiValue(Form mappingForm, string valueUid, string parameterType)
+        {
+            if (IsBooleanType(parameterType))
+            {
+                return ((CheckBox)mappingForm.Items.Item(valueUid).Specific).Checked;
+            }
+
+            var rawValue = ((EditText)mappingForm.Items.Item(valueUid).Specific).Value;
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return null;
+            }
+
+            if (string.Equals(parameterType, "DATE", StringComparison.OrdinalIgnoreCase)
+                && DateTime.TryParseExact(rawValue, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var dateValue))
+            {
+                return dateValue;
+            }
+
+            if (IsNumericType(parameterType) && decimal.TryParse(rawValue, out var numericValue))
+            {
+                return numericValue;
+            }
+
+            return rawValue;
+        }
+
+        private static void ApplyParameters(ReportDocument reportDocument, Dictionary<string, object> parameterValues)
+        {
+            if (reportDocument == null || parameterValues == null || parameterValues.Count == 0)
+            {
+                return;
+            }
+
+            foreach (ParameterFieldDefinition parameter in reportDocument.DataDefinition.ParameterFields)
+            {
+                if (!parameterValues.TryGetValue(parameter.Name, out var value))
+                {
+                    continue;
+                }
+
+                var discreteValue = new ParameterDiscreteValue { Value = value };
+                var currentValues = new ParameterValues();
+                currentValues.Add(discreteValue);
+                parameter.ApplyCurrentValues(currentValues);
+            }
         }
 
         public void ShowFromSelectedReportRow(Form principalForm, string reportsGridUid, int selectedRow)
