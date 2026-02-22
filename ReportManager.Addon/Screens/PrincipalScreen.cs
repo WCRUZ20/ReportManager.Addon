@@ -7,6 +7,7 @@ using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,6 +30,9 @@ namespace ReportManager.Addon.Screens
         private readonly Logger _log;
         private readonly PrincipalFormController _principalFormController;
         private readonly ConfigurationMetadataService _configurationMetadataService;
+        private readonly SAPbobsCOM.Company _company;
+
+        private const string DepartmentComboUid = "cmb_dpt";
 
         private SAPbouiCOM.EditText reportEdit;
 
@@ -36,13 +40,14 @@ namespace ReportManager.Addon.Screens
             Application app,
             Logger log,
             PrincipalFormController principalFormController,
-            ConfigurationMetadataService configurationMetadataService)
+            ConfigurationMetadataService configurationMetadataService,
+            SAPbobsCOM.Company company)
         {
             _app = app ?? throw new ArgumentNullException(nameof(app));
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _principalFormController = principalFormController ?? throw new ArgumentNullException(nameof(principalFormController));
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
-
+            _company = company ?? throw new ArgumentNullException(nameof(company));
         }
 
         public void WireEvents()
@@ -82,6 +87,18 @@ namespace ReportManager.Addon.Screens
 
             try
             {
+                if (formUID == FormUid
+                    && pVal.EventType == BoEventTypes.et_FORM_VISIBLE
+                    && !pVal.BeforeAction)
+                {
+                    var form = TryGetOpenForm(FormUid);
+                    if (form != null)
+                    {
+                        LoadDepartmentsCombo(form);
+                    }
+                    return;
+                }
+
                 if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ItemUID == "btn_exe"
@@ -123,6 +140,66 @@ namespace ReportManager.Addon.Screens
             {
                 _log.Error("Error en OnItemEvent", ex);
                 _app.StatusBar.SetText("Error: " + ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
+        }
+
+        private void LoadDepartmentsCombo(Form form)
+        {
+            SAPbobsCOM.Recordset recordset = null;
+
+            try
+            {
+                var combo = (ComboBox)form.Items.Item(DepartmentComboUid).Specific;
+                var comboItem = form.Items.Item(DepartmentComboUid);
+                comboItem.DisplayDesc = true;
+
+                while (combo.ValidValues.Count > 0)
+                {
+                    combo.ValidValues.Remove(0, BoSearchKey.psk_Index);
+                }
+
+                string query = "";
+
+                if (_company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                {
+                    query = "SELECT \"Code\", \"Name\" FROM \"@SS_DPTS\" ORDER BY \"Code\"";
+                }
+                else
+                {
+                    query = "SELECT Code, Name FROM [@SS_DPTS] ORDER BY Code";
+                }
+                recordset = (SAPbobsCOM.Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                recordset.DoQuery(query);
+
+                while (!recordset.EoF)
+                {
+                    var code = Convert.ToString(recordset.Fields.Item("Code").Value);
+                    var name = Convert.ToString(recordset.Fields.Item("Name").Value);
+
+                    if (!string.IsNullOrWhiteSpace(code))
+                    {
+                        combo.ValidValues.Add(code, name ?? string.Empty);
+                    }
+
+                    recordset.MoveNext();
+                }
+
+                if (combo.ValidValues.Count > 0)
+                {
+                    combo.Select(0, BoSearchKey.psk_Index);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo cargar el combo de departamentos.", ex);
+                _app.StatusBar.SetText("No se pudo cargar SS_DPTS en el combo.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
+            finally
+            {
+                if (recordset != null)
+                {
+                    Marshal.ReleaseComObject(recordset);
+                }
             }
         }
 
