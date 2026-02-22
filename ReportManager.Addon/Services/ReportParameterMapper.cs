@@ -19,6 +19,9 @@ namespace ReportManager.Addon.Services
         private const string QueryResultGridUid = "grd_qry";
         private const string QueryResultDataTableUid = "DT_QRY";
         private const string QueryResultSourceDataSource = "UD_SRC";
+        private const int ParameterRowHeight = 24;
+        private const int MappingFormMinHeight = 180;
+        private const int MappingFormBottomPadding = 72;
 
         private readonly Application _app;
         private readonly Logger _log;
@@ -72,7 +75,6 @@ namespace ReportManager.Addon.Services
             form.Left = 680;
             form.Top = 90;
             form.Width = 640;
-            form.Height = 420;
 
             var headerItem = form.Items.Add(MappingHeaderUid, BoFormItemTypes.it_STATIC);
             headerItem.Left = 12;
@@ -81,6 +83,7 @@ namespace ReportManager.Addon.Services
             ((StaticText)headerItem.Specific).Caption = $"Reporte: {reportCode} - {reportName}";
 
             RenderParameters(form, parameters);
+            ResizeMappingFormHeight(form, parameters.Count);
 
             form.Visible = true;
             _mappingFormUid = uid;
@@ -313,7 +316,11 @@ namespace ReportManager.Addon.Services
 
                 if (isDate)
                 {
-                    ((EditText)valueItem.Specific).Value = DateTime.Today.ToString("yyyyMMdd");
+                    var dateDataSourceUid = ParametersPrefix + "dt_" + suffix;
+                    form.DataSources.UserDataSources.Add(dateDataSourceUid, BoDataType.dt_DATE);
+                    valueItem.AffectsFormMode = false;
+                    ((EditText)valueItem.Specific).DataBind.SetBound(true, string.Empty, dateDataSourceUid);
+                    form.DataSources.UserDataSources.Item(dateDataSourceUid).ValueEx = DateTime.Today.ToString("yyyyMMdd");
                 }
 
                 _parameterContexts[valUid] = context;
@@ -326,16 +333,11 @@ namespace ReportManager.Addon.Services
             }
         }
 
-        private static void RemoveItemIfExists(Form form, string itemUid)
+        private void ResizeMappingFormHeight(Form form, int parameterCount)
         {
-            try
-            {
-                form.Items.Item(itemUid);
-                //form.Items.Remove(itemUid);
-            }
-            catch
-            {
-            }
+            var rowsHeight = Math.Max(parameterCount, 1) * ParameterRowHeight;
+            var calculatedHeight = MappingFormBottomPadding + rowsHeight;
+            form.Height = Math.Max(MappingFormMinHeight, calculatedHeight);
         }
 
         private string ExecuteScalar(string query)

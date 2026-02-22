@@ -100,13 +100,6 @@ namespace ReportManager.Addon.Screens
             try
             {
                 if (formUID == FormUid
-                    && !pVal.BeforeAction
-                    && pVal.ItemUID != ReportsGridUid)
-                {
-                    _reportParameterMapper.CloseMappingFormIfOpen();
-                }
-
-                if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_FORM_VISIBLE
                     && !pVal.BeforeAction)
                 {
