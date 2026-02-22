@@ -121,6 +121,9 @@
     <Content Include="Forms\Principal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\config_logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\rm_logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
