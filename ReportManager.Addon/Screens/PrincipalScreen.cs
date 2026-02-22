@@ -162,12 +162,29 @@ namespace ReportManager.Addon.Screens
                 }
 
                 if (_reportParameterMapper.IsQueryPickerForm(formUID)
-                    && pVal.EventType == BoEventTypes.et_DOUBLE_CLICK
-                    && pVal.ActionSuccess
-                    && _reportParameterMapper.IsQueryPickerGrid(pVal.ItemUID)
-                    && pVal.Row >= 0)
+                    && !pVal.BeforeAction
+                    && (pVal.EventType == BoEventTypes.et_CLICK || pVal.EventType == BoEventTypes.et_DOUBLE_CLICK)
+                    && _reportParameterMapper.IsQueryPickerGrid(pVal.ItemUID))
                 {
-                    _reportParameterMapper.ApplyQuerySelection(formUID, pVal.Row);
+                    if (!string.IsNullOrWhiteSpace(pVal.ColUID))
+                    {
+                        _reportParameterMapper.UpdateQueryPickerSelectedColumn(formUID, pVal.ColUID);
+                    }
+
+                    if (pVal.EventType == BoEventTypes.et_DOUBLE_CLICK && pVal.Row >= 0)
+                    {
+                        _reportParameterMapper.ApplyQuerySelection(formUID, pVal.Row);
+                    }
+
+                    return;
+                }
+
+                if (_reportParameterMapper.IsQueryPickerForm(formUID)
+                    && pVal.EventType == BoEventTypes.et_VALIDATE
+                    && pVal.ActionSuccess
+                    && _reportParameterMapper.IsQueryPickerSearchItem(pVal.ItemUID))
+                {
+                    _reportParameterMapper.RefreshQueryPickerGrid(formUID);
                     return;
                 }
 

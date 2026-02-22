@@ -19,6 +19,8 @@ namespace ReportManager.Addon.Services
         private const string QueryResultGridUid = "grd_qry";
         private const string QueryResultDataTableUid = "DT_QRY";
         private const string QueryResultSourceDataSource = "UD_SRC";
+        private const string QuerySearchLabelUid = "lbl_qsrch";
+        private const string QuerySearchEditUid = "edt_qsrch";
         private const string GenerateReportButtonUid = "btn_exerpt";
         private const string GenerateReportButtonCaption = "Generar reporte";
         private const int ParameterRowHeight = 24;
@@ -29,6 +31,7 @@ namespace ReportManager.Addon.Services
         private readonly Logger _log;
         private readonly SAPbobsCOM.Company _company;
         private readonly Dictionary<string, ParameterUiContext> _parameterContexts = new Dictionary<string, ParameterUiContext>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, QueryPickerContext> _queryPickerContexts = new Dictionary<string, QueryPickerContext>(StringComparer.OrdinalIgnoreCase);
 
         private string _mappingFormUid;
 
@@ -54,6 +57,11 @@ namespace ReportManager.Addon.Services
         public bool IsQueryPickerGrid(string itemUid)
         {
             return string.Equals(itemUid, QueryResultGridUid, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool IsQueryPickerSearchItem(string itemUid)
+        {
+            return string.Equals(itemUid, QuerySearchEditUid, StringComparison.OrdinalIgnoreCase);
         }
 
         public bool IsMappingForm(string formUid)
@@ -157,11 +165,23 @@ namespace ReportManager.Addon.Services
             form.Width = 550;
             form.Height = 400;
 
+            var searchLabelItem = form.Items.Add(QuerySearchLabelUid, BoFormItemTypes.it_STATIC);
+            searchLabelItem.Left = 10;
+            searchLabelItem.Top = 10;
+            searchLabelItem.Width = 500;
+            ((StaticText)searchLabelItem.Specific).Caption = "Buscar por: Columna 1";
+
+            var searchItem = form.Items.Add(QuerySearchEditUid, BoFormItemTypes.it_EDIT);
+            searchItem.Left = 10;
+            searchItem.Top = 26;
+            searchItem.Width = 500;
+            searchItem.Height = 15;
+
             var gridItem = form.Items.Add(QueryResultGridUid, BoFormItemTypes.it_GRID);
             gridItem.Left = 10;
-            gridItem.Top = 10;
+            gridItem.Top = 46;
             gridItem.Width = 500;
-            gridItem.Height = 330;
+            gridItem.Height = 294;
 
             var grid = (Grid)gridItem.Specific;
             var dt = form.DataSources.DataTables.Add(QueryResultDataTableUid);
@@ -170,11 +190,153 @@ namespace ReportManager.Addon.Services
             grid.SelectionMode = BoMatrixSelect.ms_Single;
             grid.Item.Enabled = false;
             grid.AutoResizeColumns();
+            string defaultColumn = null;
+            if (grid.DataTable != null && grid.DataTable.Columns.Count > 0)
+            {
+                defaultColumn = grid.DataTable.Columns.Item(0).Name;
+            }
+
+            _queryPickerContexts[queryFormUid] = new QueryPickerContext
+            {
+                BaseQuery = context.Query,
+                SelectedColumn = defaultColumn,
+            };
+
+            UpdateQueryPickerSearchCaption(form, defaultColumn);
 
             var source = sourceFormUid + "|" + context.ValueItemUid;
             form.DataSources.UserDataSources.Add(QueryResultSourceDataSource, BoDataType.dt_LONG_TEXT, 200);
             form.DataSources.UserDataSources.Item(QueryResultSourceDataSource).ValueEx = source;
             form.Visible = true;
+        }
+
+        public void UpdateQueryPickerSelectedColumn(string queryFormUid, string columnUid)
+        {
+            if (string.IsNullOrWhiteSpace(queryFormUid) || string.IsNullOrWhiteSpace(columnUid))
+            {
+                return;
+            }
+
+            if (!_queryPickerContexts.TryGetValue(queryFormUid, out var context))
+            {
+                return;
+            }
+
+            context.SelectedColumn = columnUid;
+            _queryPickerContexts[queryFormUid] = context;
+
+            try
+            {
+                var form = _app.Forms.Item(queryFormUid);
+                UpdateQueryPickerSearchCaption(form, columnUid);
+            }
+            catch
+            {
+            }
+        }
+
+        public void RefreshQueryPickerGrid(string queryFormUid)
+        {
+            if (!_queryPickerContexts.TryGetValue(queryFormUid, out var context))
+            {
+                return;
+            }
+
+            try
+            {
+                var form = _app.Forms.Item(queryFormUid);
+                var searchValue = string.Empty;
+                if (HasItem(form, QuerySearchEditUid))
+                {
+                    searchValue = ((EditText)form.Items.Item(QuerySearchEditUid).Specific).Value;
+                }
+
+                var grid = (Grid)form.Items.Item(QueryResultGridUid).Specific;
+                var dt = form.DataSources.DataTables.Item(QueryResultDataTableUid);
+                var query = BuildFilteredQuery(context.BaseQuery, context.SelectedColumn, searchValue);
+                dt.ExecuteQuery(query);
+                grid.DataTable = dt;
+                grid.AutoResizeColumns();
+                UpdateQueryPickerSearchCaption(form, context.SelectedColumn);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo filtrar la grilla de consultas.", ex);
+            }
+        }
+
+        private string BuildFilteredQuery(string baseQuery, string selectedColumn, string searchValue)
+        {
+            if (string.IsNullOrWhiteSpace(baseQuery)
+                || string.IsNullOrWhiteSpace(selectedColumn)
+                || string.IsNullOrWhiteSpace(searchValue))
+            {
+                return baseQuery;
+            }
+
+            var escapedValue = searchValue.Replace("'", "''");
+
+            if (_company.DbServerType == BoDataServerTypes.dst_HANADB)
+            {
+                var escapedColumn = selectedColumn.Replace("\"", "\"\"");
+                return $"select * from ({baseQuery}) T where lower(to_nvarchar(T.\"{escapedColumn}\")) like '%{escapedValue.ToLowerInvariant()}%'";
+            }
+
+            var escapedSqlColumn = selectedColumn.Replace("]", "]]");
+            return $"select * from ({baseQuery}) T where cast(T.[{escapedSqlColumn}] as nvarchar(max)) like '%{escapedValue}%'";
+        }
+
+        private static bool HasItem(Form form, string itemUid)
+        {
+            try
+            {
+                form.Items.Item(itemUid);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void UpdateQueryPickerSearchCaption(Form form, string selectedColumn)
+        {
+            if (!HasItem(form, QuerySearchLabelUid))
+            {
+                return;
+            }
+
+            var caption = "Buscar por: Columna 1";
+            try
+            {
+                var grid = (Grid)form.Items.Item(QueryResultGridUid).Specific;
+                if (!string.IsNullOrWhiteSpace(selectedColumn) && grid.DataTable != null)
+                {
+                    var index = GetColumnIndex(grid.DataTable, selectedColumn);
+                    if (index >= 0)
+                    {
+                        caption = "Buscar por: " + grid.Columns.Item(index).TitleObject.Caption;
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            ((StaticText)form.Items.Item(QuerySearchLabelUid).Specific).Caption = caption;
+        }
+
+        private static int GetColumnIndex(DataTable dataTable, string columnName)
+        {
+            for (int i = 0; i < dataTable.Columns.Count; i++)
+            {
+                if (string.Equals(dataTable.Columns.Item(i).Name, columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public void ApplyQuerySelection(string queryFormUid, int row)
@@ -220,6 +382,7 @@ namespace ReportManager.Addon.Services
                     ((EditText)sourceForm.Items.Item(context.DescriptionItemUid).Specific).Value = description;
                 }
 
+                _queryPickerContexts.Remove(queryFormUid);
                 queryForm.Close();
             }
             catch (Exception ex)
@@ -445,6 +608,12 @@ namespace ReportManager.Addon.Services
             public string Query { get; set; }
             public bool ShowDescription { get; set; }
             public string DescriptionQuery { get; set; }
+        }
+
+        private sealed class QueryPickerContext
+        {
+            public string BaseQuery { get; set; }
+            public string SelectedColumn { get; set; }
         }
 
         private sealed class ParameterUiContext
