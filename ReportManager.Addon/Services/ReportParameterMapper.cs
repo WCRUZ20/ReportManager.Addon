@@ -331,6 +331,9 @@ namespace ReportManager.Addon.Services
                 if (isBoolean)
                 {
                     var checkBox = (CheckBox)valueItem.Specific;
+                    var checkDataSourceUid = ParametersPrefix + "ck_" + suffix;
+                    form.DataSources.UserDataSources.Add(checkDataSourceUid, BoDataType.dt_SHORT_TEXT, 1);
+                    checkBox.DataBind.SetBound(true, string.Empty, checkDataSourceUid);
                     checkBox.Caption = string.Empty;
                     checkBox.ValOn = "Y";
                     checkBox.ValOff = "N";
