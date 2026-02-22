@@ -144,6 +144,15 @@ namespace ReportManager.Addon.Screens
                     return;
                 }
 
+                if (_reportParameterMapper.IsMappingForm(formUID)
+                    && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
+                    && pVal.ActionSuccess
+                    && _reportParameterMapper.IsGenerateReportButton(pVal.ItemUID))
+                {
+                    _reportParameterMapper.GenerateSelectedReport(formUID);
+                    return;
+                }
+
                 if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ItemUID == "btn_exe"

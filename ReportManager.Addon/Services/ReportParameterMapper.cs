@@ -3,6 +3,8 @@ using SAPbobsCOM;
 using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -24,6 +26,7 @@ namespace ReportManager.Addon.Services
         private const string QuerySearchEditUid = "edt_qsrch";
         private const string GenerateReportButtonUid = "btn_exerpt";
         private const string GenerateReportButtonCaption = "Generar reporte";
+        private const string ReportsBasePath = @"C:\Reportes SAP";
         private const int ParameterRowHeight = 24;
         private const int MappingFormMinHeight = 180;
         private const int MappingFormBottomPadding = 72;
@@ -69,6 +72,45 @@ namespace ReportManager.Addon.Services
         {
             return !string.IsNullOrWhiteSpace(formUid)
                 && formUid.StartsWith(MappingFormType, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool IsGenerateReportButton(string itemUid)
+        {
+            return string.Equals(itemUid, GenerateReportButtonUid, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public void GenerateSelectedReport(string mappingFormUid)
+        {
+            try
+            {
+                var form = _app.Forms.Item(mappingFormUid);
+                var reportInfo = GetCurrentReportInfo(form);
+                if (reportInfo == null)
+                {
+                    _app.StatusBar.SetText("No se pudo identificar el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+
+                var reportFilePath = ResolveReportFilePath(reportInfo.ReportCode, reportInfo.ReportName);
+                if (string.IsNullOrWhiteSpace(reportFilePath))
+                {
+                    _app.StatusBar.SetText("No se encontró el archivo de Crystal Report para el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = reportFilePath,
+                    UseShellExecute = true,
+                });
+
+                _app.StatusBar.SetText("Reporte abierto correctamente.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo abrir el Crystal Report seleccionado.", ex);
+                _app.StatusBar.SetText("No se pudo abrir el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
         }
 
         private void OpenOrRefreshMappingForm(string parentFormUid, string reportCode, string reportName, List<ReportParameterDefinition> parameters)
@@ -593,6 +635,72 @@ namespace ReportManager.Addon.Services
             buttonItem.Top = buttonTop;
             buttonItem.Width = 120;
             ((Button)buttonItem.Specific).Caption = GenerateReportButtonCaption;
+        }
+
+        private ReportInfo GetCurrentReportInfo(Form mappingForm)
+        {
+            if (mappingForm == null || !HasItem(mappingForm, MappingHeaderUid))
+            {
+                return null;
+            }
+
+            var header = ((StaticText)mappingForm.Items.Item(MappingHeaderUid).Specific).Caption;
+            if (string.IsNullOrWhiteSpace(header))
+            {
+                return null;
+            }
+
+            var normalized = header.Replace("Reporte:", string.Empty).Trim();
+            var separator = " - ";
+            var separatorIndex = normalized.IndexOf(separator, StringComparison.OrdinalIgnoreCase);
+            if (separatorIndex <= 0)
+            {
+                return new ReportInfo
+                {
+                    ReportCode = normalized,
+                    ReportName = string.Empty,
+                };
+            }
+
+            return new ReportInfo
+            {
+                ReportCode = normalized.Substring(0, separatorIndex).Trim(),
+                ReportName = normalized.Substring(separatorIndex + separator.Length).Trim(),
+            };
+        }
+
+        private string ResolveReportFilePath(string reportCode, string reportName)
+        {
+            if (string.IsNullOrWhiteSpace(reportCode) || !Directory.Exists(ReportsBasePath))
+            {
+                return null;
+            }
+
+            var expectedFileName = string.IsNullOrWhiteSpace(reportName)
+                ? string.Empty
+                : $"{reportCode} - {reportName}.rpt";
+
+            if (!string.IsNullOrWhiteSpace(expectedFileName))
+            {
+                var exactPath = Directory
+                    .EnumerateFiles(ReportsBasePath, expectedFileName, SearchOption.AllDirectories)
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(exactPath))
+                {
+                    return exactPath;
+                }
+            }
+
+            return Directory
+                .EnumerateFiles(ReportsBasePath, $"{reportCode} - *.rpt", SearchOption.AllDirectories)
+                .FirstOrDefault();
+        }
+
+        private sealed class ReportInfo
+        {
+            public string ReportCode { get; set; }
+            public string ReportName { get; set; }
         }
 
         private string ExecuteScalar(string query)
