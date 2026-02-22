@@ -74,7 +74,7 @@ namespace ReportManager.Addon.Services
             form.Title = "Parámetros de reporte";
             form.Left = 680;
             form.Top = 90;
-            form.Width = 640;
+            form.Width = 550;
 
             var headerItem = form.Items.Add(MappingHeaderUid, BoFormItemTypes.it_STATIC);
             headerItem.Left = 12;
@@ -281,7 +281,7 @@ namespace ReportManager.Addon.Services
                 var valueItem = form.Items.Add(valUid, BoFormItemTypes.it_EDIT);
                 valueItem.Left = baseLeft + 125;
                 valueItem.Top = nextTop;
-                valueItem.Width = 140;
+                valueItem.Width = 100;
 
                 var context = new ParameterUiContext
                 {
@@ -296,9 +296,10 @@ namespace ReportManager.Addon.Services
                 if (hasQuery)
                 {
                     var buttonItem = form.Items.Add(btnUid, BoFormItemTypes.it_BUTTON);
-                    buttonItem.Left = baseLeft + 268;
+                    buttonItem.Left = baseLeft + 230;
                     buttonItem.Top = nextTop;
                     buttonItem.Width = 24;
+                    buttonItem.Height = valueItem.Height;
                     ((Button)buttonItem.Specific).Caption = "...";
 
                     context.Query = prm.Query;
@@ -308,9 +309,9 @@ namespace ReportManager.Addon.Services
                 if (prm.ShowDescription && !string.IsNullOrWhiteSpace(prm.DescriptionQuery))
                 {
                     var descItem = form.Items.Add(descUid, BoFormItemTypes.it_EDIT);
-                    descItem.Left = hasQuery ? baseLeft + 296 : baseLeft + 268;
+                    descItem.Left = hasQuery ? baseLeft + 260 : baseLeft + 230;
                     descItem.Top = nextTop;
-                    descItem.Width = 300;
+                    descItem.Width = 220;
                     descItem.Enabled = false;
                 }
 
