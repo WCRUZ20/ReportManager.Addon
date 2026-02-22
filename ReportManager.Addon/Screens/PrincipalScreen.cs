@@ -31,6 +31,7 @@ namespace ReportManager.Addon.Screens
         private readonly Logger _log;
         private readonly PrincipalFormController _principalFormController;
         private readonly ConfigurationMetadataService _configurationMetadataService;
+        private readonly ReportParameterMapper _reportParameterMapper;
         private readonly SAPbobsCOM.Company _company;
 
         private const string DepartmentComboUid = "cmb_dpt";
@@ -49,12 +50,14 @@ namespace ReportManager.Addon.Screens
             Logger log,
             PrincipalFormController principalFormController,
             ConfigurationMetadataService configurationMetadataService,
+            ReportParameterMapper reportParameterMapper,
             SAPbobsCOM.Company company)
         {
             _app = app ?? throw new ArgumentNullException(nameof(app));
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _principalFormController = principalFormController ?? throw new ArgumentNullException(nameof(principalFormController));
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
+            _reportParameterMapper = reportParameterMapper ?? throw new ArgumentNullException(nameof(reportParameterMapper));
             _company = company ?? throw new ArgumentNullException(nameof(company));
 
         }
@@ -97,6 +100,13 @@ namespace ReportManager.Addon.Screens
             try
             {
                 if (formUID == FormUid
+                    && !pVal.BeforeAction
+                    && pVal.ItemUID != ReportsGridUid)
+                {
+                    _reportParameterMapper.CloseMappingFormIfOpen();
+                }
+
+                if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_FORM_VISIBLE
                     && !pVal.BeforeAction)
                 {
@@ -123,6 +133,15 @@ namespace ReportManager.Addon.Screens
                     return;
                 }
 
+                if (_reportParameterMapper.IsMappingForm(formUID)
+                    && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
+                    && pVal.ActionSuccess
+                    && _reportParameterMapper.IsParameterButton(pVal.ItemUID))
+                {
+                    _reportParameterMapper.OpenQuerySelector(formUID, pVal.ItemUID);
+                    return;
+                }
+
                 if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ItemUID == "btn_exe"
@@ -142,9 +161,20 @@ namespace ReportManager.Addon.Screens
                     var form = TryGetOpenForm(FormUid);
                     if (form != null)
                     {
-                        ShowEmbeddedReportForm(form, pVal.Row);
+                        //ShowEmbeddedReportForm(form, pVal.Row);
+                        _reportParameterMapper.ShowFromSelectedReportRow(form, ReportsGridUid, pVal.Row);
                     }
 
+                    return;
+                }
+
+                if (_reportParameterMapper.IsQueryPickerForm(formUID)
+                    && pVal.EventType == BoEventTypes.et_DOUBLE_CLICK
+                    && pVal.ActionSuccess
+                    && _reportParameterMapper.IsQueryPickerGrid(pVal.ItemUID)
+                    && pVal.Row >= 0)
+                {
+                    _reportParameterMapper.ApplyQuerySelection(formUID, pVal.Row);
                     return;
                 }
 

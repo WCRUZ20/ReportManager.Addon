@@ -12,9 +12,9 @@ namespace ReportManager.Addon.Services
 {
     public sealed class ReportParameterMapper
     {
-        private const int ParametersPane = 1;
-        private const string ParametersContainerUid = "Item_8";
         private const string ParametersPrefix = "prm_";
+        private const string MappingFormType = "RM_PRM_MAP";
+        private const string MappingHeaderUid = "lbl_hdr";
         private const string QueryResultFormType = "RM_QRY_PICK";
         private const string QueryResultGridUid = "grd_qry";
         private const string QueryResultDataTableUid = "DT_QRY";
@@ -24,6 +24,8 @@ namespace ReportManager.Addon.Services
         private readonly Logger _log;
         private readonly SAPbobsCOM.Company _company;
         private readonly Dictionary<string, ParameterUiContext> _parameterContexts = new Dictionary<string, ParameterUiContext>(StringComparer.OrdinalIgnoreCase);
+
+        private string _mappingFormUid;
 
         public ReportParameterMapper(Application app, Logger log, SAPbobsCOM.Company company)
         {
@@ -49,27 +51,86 @@ namespace ReportManager.Addon.Services
             return string.Equals(itemUid, QueryResultGridUid, StringComparison.OrdinalIgnoreCase);
         }
 
-        public void LoadFromSelectedReportRow(Form form, string reportsGridUid, int selectedRow)
+        public bool IsMappingForm(string formUid)
         {
-            if (form == null) return;
+            return !string.IsNullOrWhiteSpace(formUid)
+                && formUid.StartsWith(MappingFormType, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void OpenOrRefreshMappingForm(string reportCode, string reportName, List<ReportParameterDefinition> parameters)
+        {
+            CloseMappingFormIfOpen();
+
+            var uid = MappingFormType + DateTime.Now.Ticks;
+            var creationParams = (FormCreationParams)_app.CreateObject(BoCreatableObjectType.cot_FormCreationParams);
+            creationParams.UniqueID = uid;
+            creationParams.FormType = MappingFormType;
+            creationParams.BorderStyle = BoFormBorderStyle.fbs_Sizable;
+
+            var form = _app.Forms.AddEx(creationParams);
+            form.Title = "Parámetros de reporte";
+            form.Left = 680;
+            form.Top = 90;
+            form.Width = 640;
+            form.Height = 420;
+
+            var headerItem = form.Items.Add(MappingHeaderUid, BoFormItemTypes.it_STATIC);
+            headerItem.Left = 12;
+            headerItem.Top = 12;
+            headerItem.Width = 600;
+            ((StaticText)headerItem.Specific).Caption = $"Reporte: {reportCode} - {reportName}";
+
+            RenderParameters(form, parameters);
+
+            form.Visible = true;
+            _mappingFormUid = uid;
+        }
+
+        public void ShowFromSelectedReportRow(Form principalForm, string reportsGridUid, int selectedRow)
+        {
+            if (principalForm == null)
+            {
+                return;
+            }
 
             try
             {
-                var grid = (Grid)form.Items.Item(reportsGridUid).Specific;
+                var grid = (Grid)principalForm.Items.Item(reportsGridUid).Specific;
                 var reportCode = Convert.ToString(grid.DataTable.GetValue("U_SS_IDRPT", selectedRow));
+                var reportName = Convert.ToString(grid.DataTable.GetValue("U_SS_NOMBRPT", selectedRow));
                 if (string.IsNullOrWhiteSpace(reportCode))
                 {
                     return;
                 }
 
                 var parameters = GetReportParameters(reportCode);
-                RenderParameters(form, parameters);
+                OpenOrRefreshMappingForm(reportCode, reportName, parameters);
             }
             catch (Exception ex)
             {
                 _log.Error("No se pudieron mapear los parámetros del reporte.", ex);
                 _app.StatusBar.SetText("No se pudieron cargar los parámetros del reporte.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
+        }
+
+        public void CloseMappingFormIfOpen()
+        {
+            if (string.IsNullOrWhiteSpace(_mappingFormUid))
+            {
+                return;
+            }
+
+            try
+            {
+                var form = _app.Forms.Item(_mappingFormUid);
+                form.Close();
+            }
+            catch
+            {
+            }
+
+            _mappingFormUid = null;
+            _parameterContexts.Clear();
         }
 
         public void OpenQuerySelector(string sourceFormUid, string buttonItemUid)
@@ -195,16 +256,9 @@ namespace ReportManager.Addon.Services
 
         private void RenderParameters(Form form, List<ReportParameterDefinition> parameters)
         {
-            ClearParameterControls(form);
-            if (parameters.Count == 0)
-            {
-                return;
-            }
-
-            var container = form.Items.Item(ParametersContainerUid);
-            var baseLeft = container.Left + 10;
-            var baseTop = container.Top + 10;
-            var nextTop = baseTop;
+            _parameterContexts.Clear();
+            var baseLeft = 12;
+            var nextTop = 38;
 
             for (int i = 0; i < parameters.Count; i++)
             {
@@ -216,19 +270,15 @@ namespace ReportManager.Addon.Services
                 var descUid = ParametersPrefix + "dsc_" + suffix;
 
                 var labelItem = form.Items.Add(lblUid, BoFormItemTypes.it_STATIC);
-                labelItem.FromPane = ParametersPane;
-                labelItem.ToPane = ParametersPane;
                 labelItem.Left = baseLeft;
                 labelItem.Top = nextTop + 2;
                 labelItem.Width = 120;
                 ((StaticText)labelItem.Specific).Caption = string.IsNullOrWhiteSpace(prm.Description) ? prm.ParamId : prm.Description;
 
                 var valueItem = form.Items.Add(valUid, BoFormItemTypes.it_EDIT);
-                valueItem.FromPane = ParametersPane;
-                valueItem.ToPane = ParametersPane;
                 valueItem.Left = baseLeft + 125;
                 valueItem.Top = nextTop;
-                valueItem.Width = 120;
+                valueItem.Width = 140;
 
                 var context = new ParameterUiContext
                 {
@@ -243,11 +293,9 @@ namespace ReportManager.Addon.Services
                 if (hasQuery)
                 {
                     var buttonItem = form.Items.Add(btnUid, BoFormItemTypes.it_BUTTON);
-                    buttonItem.FromPane = ParametersPane;
-                    buttonItem.ToPane = ParametersPane;
-                    buttonItem.Left = baseLeft + 248;
+                    buttonItem.Left = baseLeft + 268;
                     buttonItem.Top = nextTop;
-                    buttonItem.Width = 22;
+                    buttonItem.Width = 24;
                     ((Button)buttonItem.Specific).Caption = "...";
 
                     context.Query = prm.Query;
@@ -257,11 +305,9 @@ namespace ReportManager.Addon.Services
                 if (prm.ShowDescription && !string.IsNullOrWhiteSpace(prm.DescriptionQuery))
                 {
                     var descItem = form.Items.Add(descUid, BoFormItemTypes.it_EDIT);
-                    descItem.FromPane = ParametersPane;
-                    descItem.ToPane = ParametersPane;
-                    descItem.Left = hasQuery ? baseLeft + 275 : baseLeft + 248;
+                    descItem.Left = hasQuery ? baseLeft + 296 : baseLeft + 268;
                     descItem.Top = nextTop;
-                    descItem.Width = 140;
+                    descItem.Width = 300;
                     descItem.Enabled = false;
                 }
 
@@ -278,27 +324,6 @@ namespace ReportManager.Addon.Services
 
                 nextTop += 24;
             }
-        }
-
-        private void ClearParameterControls(Form form)
-        {
-            var dynamicItemUids = _parameterContexts.Values
-                .SelectMany(x => new[] { x.ValueItemUid, x.ButtonItemUid, x.DescriptionItemUid })
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            foreach (var uid in dynamicItemUids)
-            {
-                RemoveItemIfExists(form, uid);
-            }
-
-            for (int i = 0; i < 100; i++)
-            {
-                RemoveItemIfExists(form, ParametersPrefix + "lbl_" + i.ToString("00"));
-            }
-
-            _parameterContexts.Clear();
         }
 
         private static void RemoveItemIfExists(Form form, string itemUid)
