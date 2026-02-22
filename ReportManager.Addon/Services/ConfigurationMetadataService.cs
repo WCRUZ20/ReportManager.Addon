@@ -87,8 +87,8 @@ namespace ReportManager.Addon.Services
 
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDPARAM", Description = "Id Param", ChildNumber = 1, ColumnNumber = 1 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DSCPARAM", Description = "Descripción", ChildNumber = 1, ColumnNumber = 2 });
-            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "SS_TIPO", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 3 });
-            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "SS_OBLIGA", Description = "Obligatorio", ChildNumber = 1, ColumnNumber = 4 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_TIPO", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 3 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_OBLIGA", Description = "Obligatorio", ChildNumber = 1, ColumnNumber = 4 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 5 });
 
             RegisterUdoIfNotExists(def);
@@ -283,6 +283,8 @@ namespace ReportManager.Addon.Services
 
                 AddFindColumns(udo, def.FindColumns);
 
+                EnsureDefaultFormColumns(def);
+
                 AddChildTables(udo, def.ChildTables);
 
                 AddFormColumns(udo, def.FormColumns);
@@ -385,6 +387,29 @@ namespace ReportManager.Addon.Services
                 //var company = GetCompany();
                 _company.GetLastError(out int errorCode, out string errorDescription);
                 throw new InvalidOperationException(errorMessage + " SAP(" + errorCode + "): " + errorDescription);
+            }
+        }
+
+        private static void EnsureDefaultFormColumns(UdoDefinition def)
+        {
+            if (def.CanCreateDefaultForm != BoYesNoEnum.tYES) return;
+            if (def.FormColumns.Count > 0) return;
+            if (def.EnhancedFormColumns == null || def.EnhancedFormColumns.Count == 0) return;
+
+            var groupedColumns = def.EnhancedFormColumns
+                .Where(c => c != null && !string.IsNullOrWhiteSpace(c.Alias))
+                .OrderBy(c => c.ChildNumber)
+                .ThenBy(c => c.ColumnNumber)
+                .ToList();
+
+            foreach (var col in groupedColumns)
+            {
+                def.FormColumns.Add(new UdoFormColumn
+                {
+                    Alias = col.Alias,
+                    Description = col.Description,
+                    SonNumber = col.ChildNumber
+                });
             }
         }
 
