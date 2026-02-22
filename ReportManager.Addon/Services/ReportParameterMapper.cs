@@ -198,7 +198,19 @@ namespace ReportManager.Addon.Services
                 }
 
                 var selectedValue = Convert.ToString(queryGrid.DataTable.GetValue(0, row));
-                ((EditText)sourceForm.Items.Item(valueUid).Specific).Value = selectedValue;
+                if (_parameterContexts.TryGetValue(valueUid, out var valueContext)
+                    && valueContext.ControlType == ParameterControlType.CheckBox)
+                {
+                    var checkBox = (CheckBox)sourceForm.Items.Item(valueUid).Specific;
+                    checkBox.Checked = string.Equals(selectedValue, "Y", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(selectedValue, "1", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(selectedValue, "TRUE", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(selectedValue, "T", StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    ((EditText)sourceForm.Items.Item(valueUid).Specific).Value = selectedValue;
+                }
 
                 if (_parameterContexts.TryGetValue(valueUid, out var context)
                     && !string.IsNullOrWhiteSpace(context.DescriptionItemUid)
@@ -214,6 +226,21 @@ namespace ReportManager.Addon.Services
             {
                 _log.Error("No se pudo aplicar la selección de consulta.", ex);
             }
+        }
+
+        private static bool IsBooleanType(string parameterType)
+        {
+            return string.Equals(parameterType, "BOOL", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(parameterType, "BOOLEAN", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsNumericType(string parameterType)
+        {
+            return string.Equals(parameterType, "NUMERIC", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(parameterType, "NUMBER", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(parameterType, "INT", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(parameterType, "INTEGER", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(parameterType, "DECIMAL", StringComparison.OrdinalIgnoreCase);
         }
 
         private List<ReportParameterDefinition> GetReportParameters(string reportCode)
@@ -282,20 +309,37 @@ namespace ReportManager.Addon.Services
                 labelItem.Width = 120;
                 ((StaticText)labelItem.Specific).Caption = string.IsNullOrWhiteSpace(prm.Description) ? prm.ParamId : prm.Description;
 
-                var valueItem = form.Items.Add(valUid, BoFormItemTypes.it_EDIT);
+                var hasQuery = !string.IsNullOrWhiteSpace(prm.Query);
+                var isDate = string.Equals(prm.Type, "DATE", StringComparison.OrdinalIgnoreCase);
+                var isBoolean = IsBooleanType(prm.Type);
+                var isNumeric = IsNumericType(prm.Type);
+
+                var valueItemType = isBoolean ? BoFormItemTypes.it_CHECK_BOX : BoFormItemTypes.it_EDIT;
+                var valueItem = form.Items.Add(valUid, valueItemType);
                 valueItem.Left = baseLeft + 125;
                 valueItem.Top = nextTop;
-                valueItem.Width = 100;
+                valueItem.Width = isBoolean ? 20 : 100;
 
                 var context = new ParameterUiContext
                 {
                     ValueItemUid = valUid,
                     DescriptionItemUid = descUid,
-                    DescriptionQuery = prm.DescriptionQuery
+                    DescriptionQuery = prm.DescriptionQuery,
+                    ControlType = isBoolean ? ParameterControlType.CheckBox : ParameterControlType.EditText
                 };
 
-                var hasQuery = !string.IsNullOrWhiteSpace(prm.Query);
-                var isDate = string.Equals(prm.Type, "DATE", StringComparison.OrdinalIgnoreCase);
+                if (isBoolean)
+                {
+                    var checkBox = (CheckBox)valueItem.Specific;
+                    checkBox.Caption = string.Empty;
+                    checkBox.ValOn = "Y";
+                    checkBox.ValOff = "N";
+                    checkBox.Checked = false;
+                }
+                else if (isNumeric)
+                {
+                    ((EditText)valueItem.Specific).Value = string.Empty;
+                }
 
                 if (hasQuery)
                 {
@@ -319,7 +363,7 @@ namespace ReportManager.Addon.Services
                     descItem.Enabled = false;
                 }
 
-                if (isDate)
+                if (isDate && !isBoolean)
                 {
                     var dateDataSourceUid = ParametersPrefix + "dt_" + suffix;
                     form.DataSources.UserDataSources.Add(dateDataSourceUid, BoDataType.dt_DATE);
@@ -407,7 +451,15 @@ namespace ReportManager.Addon.Services
             public string DescriptionItemUid { get; set; }
             public string Query { get; set; }
             public string DescriptionQuery { get; set; }
+            public ParameterControlType ControlType { get; set; } = ParameterControlType.EditText;
         }
+
+        private enum ParameterControlType
+        {
+            EditText,
+            CheckBox
+        }
+
     }
 
 }
