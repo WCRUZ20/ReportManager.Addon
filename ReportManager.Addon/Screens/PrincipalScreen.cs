@@ -36,6 +36,13 @@ namespace ReportManager.Addon.Screens
         private const string DepartmentComboUid = "cmb_dpt";
         private const string ReportsGridUid = "grd_rpt";
         private const string ReportsDataTableUid = "DT_RPTS";
+        private const string EmbeddedBoxUid = "bx_rptdtl";
+        private const string EmbeddedTitleUid = "lbl_rptttl";
+        private const string EmbeddedIdLabelUid = "lbl_rptid";
+        private const string EmbeddedNameLabelUid = "lbl_rptnam";
+        private const string EmbeddedIdValueUid = "txt_rptid";
+        private const string EmbeddedNameValueUid = "txt_rptnam";
+
 
         public PrincipalScreen(
             Application app,
@@ -123,6 +130,21 @@ namespace ReportManager.Addon.Screens
                 {
                     _app.StatusBar.SetText("Se ha presionado el botón.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     _log.Info("btn_exe presionado en RM_PRINCIPAL");
+                    return;
+                }
+
+                if (formUID == FormUid
+                    && !pVal.BeforeAction
+                    && (pVal.EventType == BoEventTypes.et_CLICK || pVal.EventType == BoEventTypes.et_DOUBLE_CLICK)
+                    && pVal.ItemUID == ReportsGridUid
+                    && pVal.Row >= 0)
+                {
+                    var form = TryGetOpenForm(FormUid);
+                    if (form != null)
+                    {
+                        ShowEmbeddedReportForm(form, pVal.Row);
+                    }
+
                     return;
                 }
 
@@ -217,6 +239,86 @@ namespace ReportManager.Addon.Screens
                 {
                     Marshal.ReleaseComObject(recordset);
                 }
+            }
+        }
+
+        private void ShowEmbeddedReportForm(Form form, int row)
+        {
+            var grid = (Grid)form.Items.Item(ReportsGridUid).Specific;
+            if (grid.DataTable == null || grid.DataTable.Rows.Count <= row)
+            {
+                return;
+            }
+
+            EnsureEmbeddedReportControls(form);
+
+            var reportId = Convert.ToString(grid.DataTable.GetValue("U_SS_IDRPT", row)) ?? string.Empty;
+            var reportName = Convert.ToString(grid.DataTable.GetValue("U_SS_NOMBRPT", row)) ?? string.Empty;
+
+            ((EditText)form.Items.Item(EmbeddedIdValueUid).Specific).Value = reportId;
+            ((EditText)form.Items.Item(EmbeddedNameValueUid).Specific).Value = reportName;
+        }
+
+        private void ClearEmbeddedReportData(Form form)
+        {
+            if (!HasItem(form, EmbeddedIdValueUid) || !HasItem(form, EmbeddedNameValueUid))
+            {
+                return;
+            }
+
+            ((EditText)form.Items.Item(EmbeddedIdValueUid).Specific).Value = string.Empty;
+            ((EditText)form.Items.Item(EmbeddedNameValueUid).Specific).Value = string.Empty;
+        }
+
+        private static void EnsureEmbeddedReportControls(Form form)
+        {
+            if (!HasItem(form, EmbeddedBoxUid))
+            {
+                var panel = form.Items.Add(EmbeddedBoxUid, BoFormItemTypes.it_RECTANGLE);
+                panel.Left = 337;
+                panel.Top = 66;
+                panel.Width = 320;
+                panel.Height = 120;
+            }
+
+            if (!HasItem(form, EmbeddedTitleUid))
+            {
+                AddStaticText(form, EmbeddedTitleUid, "Detalle del reporte", 347, 76, 180);
+            }
+
+            if (!HasItem(form, EmbeddedIdLabelUid))
+            {
+                AddStaticText(form, EmbeddedIdLabelUid, "Id:", 347, 100, 30);
+            }
+
+            if (!HasItem(form, EmbeddedIdValueUid))
+            {
+                AddEditText(form, EmbeddedIdValueUid, 385, 98, 250, false);
+                form.Items.Item(EmbeddedIdValueUid).Enabled = false;
+            }
+
+            if (!HasItem(form, EmbeddedNameLabelUid))
+            {
+                AddStaticText(form, EmbeddedNameLabelUid, "Nombre:", 347, 124, 45);
+            }
+
+            if (!HasItem(form, EmbeddedNameValueUid))
+            {
+                AddEditText(form, EmbeddedNameValueUid, 395, 122, 240, false);
+                form.Items.Item(EmbeddedNameValueUid).Enabled = false;
+            }
+        }
+
+        private static bool HasItem(Form form, string itemUid)
+        {
+            try
+            {
+                form.Items.Item(itemUid);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
