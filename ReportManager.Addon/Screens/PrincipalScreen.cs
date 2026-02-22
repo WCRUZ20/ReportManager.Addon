@@ -7,6 +7,7 @@ using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,8 +34,8 @@ namespace ReportManager.Addon.Screens
         private readonly SAPbobsCOM.Company _company;
 
         private const string DepartmentComboUid = "cmb_dpt";
-
-        private SAPbouiCOM.EditText reportEdit;
+        private const string ReportsGridUid = "grd_rpt";
+        private const string ReportsDataTableUid = "DT_RPTS";
 
         public PrincipalScreen(
             Application app,
@@ -97,6 +98,20 @@ namespace ReportManager.Addon.Screens
                     if (form != null && ItemsCount != 0) //por eso valido aqui cuando el # elementos es diferente de 0
                     {
                         LoadDepartmentsCombo(form);
+                        LoadReportsGrid(form);
+                    }
+                    return;
+                }
+
+                if (formUID == FormUid
+                    && pVal.EventType == BoEventTypes.et_COMBO_SELECT
+                    && pVal.ItemUID == DepartmentComboUid
+                    && pVal.ActionSuccess)
+                {
+                    var form = TryGetOpenForm(FormUid);
+                    if (form != null)
+                    {
+                        LoadReportsGrid(form);
                     }
                     return;
                 }
@@ -202,6 +217,75 @@ namespace ReportManager.Addon.Screens
                 {
                     Marshal.ReleaseComObject(recordset);
                 }
+            }
+        }
+
+        private void LoadReportsGrid(Form form)
+        {
+            try
+            {
+                var combo = (ComboBox)form.Items.Item(DepartmentComboUid).Specific;
+                var selectedDepartment = combo.Selected == null ? string.Empty : combo.Selected.Value;
+
+                if (string.IsNullOrWhiteSpace(selectedDepartment))
+                {
+                    return;
+                }
+
+                var grid = (Grid)form.Items.Item(ReportsGridUid).Specific;
+                var dataTable = GetOrCreateDataTable(form, ReportsDataTableUid);
+
+                var escapedDepartment = selectedDepartment.Replace("'", "''");
+                var query = BuildReportsByDepartmentQuery(escapedDepartment);
+                dataTable.ExecuteQuery(query);
+
+                grid.DataTable = dataTable;
+                grid.SelectionMode = BoMatrixSelect.ms_Single;
+                grid.Item.Enabled = false;
+
+                if (grid.Columns.Count > 0)
+                {
+                    grid.Columns.Item("U_SS_IDRPT").TitleObject.Caption = "Id Reporte";
+                }
+
+                if (grid.Columns.Count > 1)
+                {
+                    grid.Columns.Item("U_SS_NOMBRPT").TitleObject.Caption = "Nombre Reporte";
+                }
+
+                grid.AutoResizeColumns();
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo cargar el grid de reportes.", ex);
+                _app.StatusBar.SetText("No se pudo cargar la grilla de reportes.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
+        }
+
+        private string BuildReportsByDepartmentQuery(string departmentCode)
+        {
+            if (_company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+            {
+                return "select T1.\"U_SS_IDRPT\", T2.\"U_SS_NOMBRPT\"from \"@SS_DFRPT_CAB\" T0 inner join \"@SS_DFRPT_DET\" T1 ON T0.\"Code\" = T1.\"Code\" inner join \"@SS_PRM_CAB\" T2 ON T1.\"U_SS_IDRPT\" = T2.\"Code\" where T0.\"U_SS_IDDPT\" = 'departmentCode' order by 1";
+            }
+
+            return $@"select T1.U_SS_IDRPT, T2.U_SS_NOMBRPT
+                from [@SS_DFRPT_CAB] T0
+                inner join [@SS_DFRPT_DET] T1 ON T0.Code = T1.Code
+                inner join [@SS_PRM_CAB] T2 ON T1.U_SS_IDRPT = T2.Code
+                where T0.U_SS_IDDPT = '{departmentCode}'
+                order by 1";
+        }
+
+        private static DataTable GetOrCreateDataTable(Form form, string dataTableUid)
+        {
+            try
+            {
+                return form.DataSources.DataTables.Item(dataTableUid);
+            }
+            catch
+            {
+                return form.DataSources.DataTables.Add(dataTableUid);
             }
         }
 
