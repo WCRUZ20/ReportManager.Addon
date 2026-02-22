@@ -30,6 +30,8 @@ namespace ReportManager.Addon.Screens
         private readonly PrincipalFormController _principalFormController;
         private readonly ConfigurationMetadataService _configurationMetadataService;
 
+        private SAPbouiCOM.EditText reportEdit;
+
         public PrincipalScreen(
             Application app,
             Logger log,
@@ -40,6 +42,7 @@ namespace ReportManager.Addon.Screens
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _principalFormController = principalFormController ?? throw new ArgumentNullException(nameof(principalFormController));
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
+
         }
 
         public void WireEvents()
@@ -79,31 +82,6 @@ namespace ReportManager.Addon.Screens
 
             try
             {
-                if (formUID == FormUid
-                    && pVal.EventType == BoEventTypes.et_FORM_LOAD
-                    && pVal.ActionSuccess)
-                {
-                    ConfigureChooseFromLists();
-                    return;
-                }
-
-                if (formUID == FormUid
-                    && pVal.EventType == BoEventTypes.et_CHOOSE_FROM_LIST
-                    && pVal.BeforeAction
-                    && pVal.ItemUID == ReportEditUid)
-                {
-                    ApplyReportChooseFromListFilter();
-                    return;
-                }
-
-                if (formUID == FormUid
-                    && pVal.EventType == BoEventTypes.et_CHOOSE_FROM_LIST
-                    && !pVal.BeforeAction)
-                {
-                    HandleChooseFromListSelection(ref pVal);
-                    return;
-                }
-
                 if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ItemUID == "btn_exe"
@@ -146,182 +124,6 @@ namespace ReportManager.Addon.Screens
                 _log.Error("Error en OnItemEvent", ex);
                 _app.StatusBar.SetText("Error: " + ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
-        }
-
-        private void ConfigureChooseFromLists()
-        {
-            var form = TryGetOpenForm(FormUid);
-            if (form == null)
-            {
-                return;
-            }
-
-            //EnsureChooseFromList(form, DepartmentChooseFromListUid, "@SS_DPTS");
-            EnsureChooseFromList(form, ReportChooseFromListUid, "SS_PRM_CAB");
-
-            //var departmentEdit = (EditText)form.Items.Item(DepartmentEditUid).Specific;
-            //departmentEdit.ChooseFromListUID = DepartmentChooseFromListUid;
-            //departmentEdit.ChooseFromListAlias = "Code";
-
-            var reportEdit = (EditText)form.Items.Item(ReportEditUid).Specific;
-            reportEdit.ChooseFromListUID = ReportChooseFromListUid;
-            reportEdit.ChooseFromListAlias = "U_SS_IDRPT";
-        }
-
-        private void EnsureChooseFromList(Form form, string chooseFromListUid, string objectType)
-        {
-            try
-            {
-                if (form.ChooseFromLists.Item(chooseFromListUid) != null)
-                {
-                    return;
-                }
-            }
-            catch
-            {
-            }
-
-            var chooseFromListParams = (ChooseFromListCreationParams)_app.CreateObject(BoCreatableObjectType.cot_ChooseFromListCreationParams);
-            chooseFromListParams.UniqueID = chooseFromListUid;
-            chooseFromListParams.ObjectType = objectType;
-            chooseFromListParams.MultiSelection = false;
-            form.ChooseFromLists.Add(chooseFromListParams);
-        }
-
-        private void ApplyReportChooseFromListFilter()
-        {
-            var form = TryGetOpenForm(FormUid);
-            if (form == null)
-            {
-                return;
-            }
-
-            var departmentValue = ((EditText)form.Items.Item(DepartmentEditUid).Specific).Value?.Trim();
-            var reportChooseFromList = form.ChooseFromLists.Item(ReportChooseFromListUid);
-            var conditions = (Conditions)_app.CreateObject(BoCreatableObjectType.cot_Conditions);
-
-            if (string.IsNullOrWhiteSpace(departmentValue))
-            {
-                reportChooseFromList.SetConditions(conditions);
-                return;
-            }
-
-            var reportIds = GetReportIdsByDepartment(departmentValue);
-            if (reportIds.Count == 0)
-            {
-                var noDataCondition = conditions.Add();
-                noDataCondition.Alias = "Code";
-                noDataCondition.Operation = BoConditionOperation.co_EQUAL;
-                noDataCondition.CondVal = "___SIN_RESULTADOS___";
-                reportChooseFromList.SetConditions(conditions);
-                return;
-            }
-
-            for (int i = 0; i < reportIds.Count; i++)
-            {
-                var condition = conditions.Add();
-                condition.Alias = "U_SS_IDRPT";
-                condition.Operation = BoConditionOperation.co_EQUAL;
-                condition.CondVal = reportIds[i];
-
-                if (i < reportIds.Count - 1)
-                {
-                    condition.Relationship = BoConditionRelationship.cr_OR;
-                }
-            }
-
-            reportChooseFromList.SetConditions(conditions);
-        }
-
-        private List<string> GetReportIdsByDepartment(string departmentId)
-        {
-            var reportIds = new List<string>();
-            var sanitizedDepartmentId = departmentId.Replace("'", "''");
-            var sql =
-                "SELECT DISTINCT T1.\"U_SS_IDRPT\" " +
-                "FROM \"@SS_DFRPT_CAB\" T0 " +
-                "INNER JOIN \"@SS_DFRPT_DET\" T1 ON T0.\"Code\" = T1.\"Code\" " +
-                "WHERE T0.\"U_SS_IDDPT\" = '" + sanitizedDepartmentId + "' " +
-                "AND IFNULL(T1.\"U_SS_IDRPT\", '') <> ''";
-
-            Recordset rs = null;
-            try
-            {
-                rs = (Recordset)Globals.rCompany.GetBusinessObject(BoObjectTypes.BoRecordset);
-                rs.DoQuery(sql);
-
-                while (!rs.EoF)
-                {
-                    var reportId = (rs.Fields.Item(0).Value ?? string.Empty).ToString().Trim();
-                    if (!string.IsNullOrWhiteSpace(reportId))
-                    {
-                        reportIds.Add(reportId);
-                    }
-
-                    rs.MoveNext();
-                }
-            }
-            finally
-            {
-                if (rs != null)
-                {
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(rs);
-                }
-            }
-
-            return reportIds;
-        }
-
-        private void HandleChooseFromListSelection(ref ItemEvent pVal)
-        {
-            var chooseFromListEvent = (IChooseFromListEvent)pVal;
-            var selectedObjects = chooseFromListEvent.SelectedObjects;
-            if (selectedObjects == null || selectedObjects.Rows.Count == 0)
-            {
-                return;
-            }
-
-            var form = TryGetOpenForm(FormUid);
-            if (form == null)
-            {
-                return;
-            }
-
-            if (pVal.ItemUID == DepartmentEditUid)
-            {
-                var departmentValue = GetFirstAvailableValue(selectedObjects, "Code", "U_Code", "Name");
-                ((EditText)form.Items.Item(DepartmentEditUid).Specific).Value = departmentValue;
-                ((EditText)form.Items.Item(ReportEditUid).Specific).Value = string.Empty;
-                return;
-            }
-
-            if (pVal.ItemUID == ReportEditUid)
-            {
-                var reportValue = GetFirstAvailableValue(selectedObjects, "U_SS_IDRPT", "Code", "Name");
-                ((EditText)form.Items.Item(ReportEditUid).Specific).Value = reportValue;
-            }
-        }
-
-        private static string GetFirstAvailableValue(DataTable table, params string[] columns)
-        {
-            foreach (var column in columns)
-            {
-                for (int i = 0; i < table.Columns.Count; i++)
-                {
-                    if (!string.Equals(table.Columns.Item(i).Name, column, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var value = (table.GetValue(table.Columns.Item(i).Name, 0) ?? string.Empty).ToString();
-                    if (!string.IsNullOrWhiteSpace(value))
-                    {
-                        return value.Trim();
-                    }
-                }
-            }
-
-            return string.Empty;
         }
 
         private void OpenConfigurationLoginForm()
