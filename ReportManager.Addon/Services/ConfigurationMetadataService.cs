@@ -54,6 +54,9 @@ namespace ReportManager.Addon.Services
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_TIPO", "Tipo parámetro", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMTYPE");
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_OBLIGA", "Obligatorio", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_QUERY", "Query", BoFieldTypes.db_Memo, 250);
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_DESC", "Descripción selección", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_QUERYD", "Query descripción", BoFieldTypes.db_Memo, 250);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
             var def = new UdoDefinition
@@ -89,7 +92,10 @@ namespace ReportManager.Addon.Services
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DSCPARAM", Description = "Descripción", ChildNumber = 1, ColumnNumber = 2 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_TIPO", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 3 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_OBLIGA", Description = "Obligatorio", ChildNumber = 1, ColumnNumber = 4 });
-            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 5 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_QUERY", Description = "Query", ChildNumber = 1, ColumnNumber = 5 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DESC", Description = "Descripción selección", ChildNumber = 1, ColumnNumber = 6 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_QUERYD", Description = "Query Descripción", ChildNumber = 1, ColumnNumber = 7 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 8 });
 
             RegisterUdoIfNotExists(def);
         }
@@ -101,6 +107,7 @@ namespace ReportManager.Addon.Services
 
             CreateUserTableIfNotExists("SS_DFRPT_DET", "Definicion Reporte Det", BoUTBTableType.bott_MasterDataLines);
             CreateUserFieldIfNotExists("@SS_DFRPT_DET", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRM_CAB");
+            CreateUserFieldIfNotExists("@SS_DFRPT_DET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
             var def = new UdoDefinition
             {
@@ -129,6 +136,7 @@ namespace ReportManager.Addon.Services
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDDPT", Description = "Departamento", ChildNumber = 0, ColumnNumber = 3 });
 
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDRPT", Description = "Reporte", ChildNumber = 1, ColumnNumber = 1 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 2 });
 
             RegisterUdoIfNotExists(def);
         }
