@@ -48,6 +48,7 @@ namespace ReportManager.Addon.Screens
             _principalFormController = principalFormController ?? throw new ArgumentNullException(nameof(principalFormController));
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
             _company = company ?? throw new ArgumentNullException(nameof(company));
+
         }
 
         public void WireEvents()
@@ -92,7 +93,8 @@ namespace ReportManager.Addon.Screens
                     && !pVal.BeforeAction)
                 {
                     var form = TryGetOpenForm(FormUid);
-                    if (form != null)
+                    var ItemsCount = form.Items.Count; //abre algo como un form vacio al comienzo, despues un segundo form con los elementos definidos en el xml
+                    if (form != null && ItemsCount != 0) //por eso valido aqui cuando el # elementos es diferente de 0
                     {
                         LoadDepartmentsCombo(form);
                     }
