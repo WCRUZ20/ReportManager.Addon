@@ -156,12 +156,12 @@ namespace ReportManager.Addon.Screens
                 return;
             }
 
-            EnsureChooseFromList(form, DepartmentChooseFromListUid, "SS_DPTS");
+            //EnsureChooseFromList(form, DepartmentChooseFromListUid, "@SS_DPTS");
             EnsureChooseFromList(form, ReportChooseFromListUid, "SS_PRM_CAB");
 
-            var departmentEdit = (EditText)form.Items.Item(DepartmentEditUid).Specific;
-            departmentEdit.ChooseFromListUID = DepartmentChooseFromListUid;
-            departmentEdit.ChooseFromListAlias = "Code";
+            //var departmentEdit = (EditText)form.Items.Item(DepartmentEditUid).Specific;
+            //departmentEdit.ChooseFromListUID = DepartmentChooseFromListUid;
+            //departmentEdit.ChooseFromListAlias = "Code";
 
             var reportEdit = (EditText)form.Items.Item(ReportEditUid).Specific;
             reportEdit.ChooseFromListUID = ReportChooseFromListUid;
