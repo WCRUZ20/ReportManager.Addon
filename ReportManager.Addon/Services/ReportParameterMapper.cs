@@ -19,6 +19,7 @@ namespace ReportManager.Addon.Services
         private const string QueryResultGridUid = "grd_qry";
         private const string QueryResultDataTableUid = "DT_QRY";
         private const string QueryResultSourceDataSource = "UD_SRC";
+        private const string ParentFormDataSourceUid = "UD_PARENT";
         private const string QuerySearchLabelUid = "lbl_qsrch";
         private const string QuerySearchEditUid = "edt_qsrch";
         private const string GenerateReportButtonUid = "btn_exerpt";
@@ -70,7 +71,7 @@ namespace ReportManager.Addon.Services
                 && formUid.StartsWith(MappingFormType, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void OpenOrRefreshMappingForm(string reportCode, string reportName, List<ReportParameterDefinition> parameters)
+        private void OpenOrRefreshMappingForm(string parentFormUid, string reportCode, string reportName, List<ReportParameterDefinition> parameters)
         {
             CloseMappingFormIfOpen();
 
@@ -81,6 +82,7 @@ namespace ReportManager.Addon.Services
             creationParams.BorderStyle = BoFormBorderStyle.fbs_Fixed;
 
             var form = _app.Forms.AddEx(creationParams);
+            SetParentForm(form, parentFormUid);
             form.Title = "Parámetros de reporte";
             form.Left = 680;
             form.Top = 90;
@@ -118,7 +120,7 @@ namespace ReportManager.Addon.Services
                 }
 
                 var parameters = GetReportParameters(reportCode);
-                OpenOrRefreshMappingForm(reportCode, reportName, parameters);
+                OpenOrRefreshMappingForm(principalForm.UniqueID, reportCode, reportName, parameters);
             }
             catch (Exception ex)
             {
@@ -161,6 +163,7 @@ namespace ReportManager.Addon.Services
             creationParams.BorderStyle = BoFormBorderStyle.fbs_Sizable;
 
             var form = _app.Forms.AddEx(creationParams);
+            SetParentForm(form, sourceFormUid);
             form.Title = "Seleccionar valor";
             form.Width = 550;
             form.Height = 400;
@@ -208,6 +211,30 @@ namespace ReportManager.Addon.Services
             form.DataSources.UserDataSources.Add(QueryResultSourceDataSource, BoDataType.dt_LONG_TEXT, 200);
             form.DataSources.UserDataSources.Item(QueryResultSourceDataSource).ValueEx = source;
             form.Visible = true;
+        }
+
+        private static void SetParentForm(Form form, string parentFormUid)
+        {
+            if (form == null || string.IsNullOrWhiteSpace(parentFormUid))
+            {
+                return;
+            }
+
+            try
+            {
+                form.DataSources.UserDataSources.Add(ParentFormDataSourceUid, BoDataType.dt_SHORT_TEXT, 100);
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                form.DataSources.UserDataSources.Item(ParentFormDataSourceUid).ValueEx = parentFormUid;
+            }
+            catch
+            {
+            }
         }
 
         public void UpdateQueryPickerSelectedColumn(string queryFormUid, string columnUid)

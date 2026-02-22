@@ -43,7 +43,7 @@ namespace ReportManager.Addon.Screens
         private const string EmbeddedNameLabelUid = "lbl_rptnam";
         private const string EmbeddedIdValueUid = "txt_rptid";
         private const string EmbeddedNameValueUid = "txt_rptnam";
-
+        private const string ParentFormDataSourceUid = "UD_PARENT";
 
         public PrincipalScreen(
             Application app,
@@ -99,6 +99,15 @@ namespace ReportManager.Addon.Screens
 
             try
             {
+                if (pVal.BeforeAction
+                    && pVal.EventType == BoEventTypes.et_FORM_CLOSE
+                    && HasOpenChildForms(formUID))
+                {
+                    bubbleEvent = false;
+                    _app.StatusBar.SetText("No puede cerrar este formulario mientras existan formularios hijos abiertos.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
+                    return;
+                }
+
                 if (formUID == FormUid
                     && pVal.EventType == BoEventTypes.et_FORM_VISIBLE
                     && !pVal.BeforeAction)
@@ -229,6 +238,46 @@ namespace ReportManager.Addon.Screens
                 _log.Error("Error en OnItemEvent", ex);
                 _app.StatusBar.SetText("Error: " + ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
+        }
+
+        private bool HasOpenChildForms(string parentFormUid)
+        {
+            if (string.IsNullOrWhiteSpace(parentFormUid))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _app.Forms.Count; i++)
+            {
+                Form form = null;
+                try
+                {
+                    form = _app.Forms.Item(i);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (form == null || string.Equals(form.UniqueID, parentFormUid, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var parentUid = form.DataSources.UserDataSources.Item(ParentFormDataSourceUid).ValueEx;
+                    if (string.Equals(parentUid, parentFormUid, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return false;
         }
 
         private void LoadDepartmentsCombo(Form form)
