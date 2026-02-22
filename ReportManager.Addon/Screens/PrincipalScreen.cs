@@ -180,6 +180,15 @@ namespace ReportManager.Addon.Screens
                 }
 
                 if (_reportParameterMapper.IsQueryPickerForm(formUID)
+                    && !pVal.BeforeAction
+                    && pVal.EventType == BoEventTypes.et_KEY_DOWN
+                    && _reportParameterMapper.IsQueryPickerSearchItem(pVal.ItemUID))
+                {
+                    _reportParameterMapper.RefreshQueryPickerGrid(formUID);
+                    return;
+                }
+
+                if (_reportParameterMapper.IsQueryPickerForm(formUID)
                     && pVal.EventType == BoEventTypes.et_VALIDATE
                     && pVal.ActionSuccess
                     && _reportParameterMapper.IsQueryPickerSearchItem(pVal.ItemUID))

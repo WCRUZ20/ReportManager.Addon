@@ -229,6 +229,7 @@ namespace ReportManager.Addon.Services
             {
                 var form = _app.Forms.Item(queryFormUid);
                 UpdateQueryPickerSearchCaption(form, columnUid);
+                RefreshQueryPickerGrid(queryFormUid);
             }
             catch
             {
@@ -283,7 +284,7 @@ namespace ReportManager.Addon.Services
             }
 
             var escapedSqlColumn = selectedColumn.Replace("]", "]]");
-            return $"select * from ({baseQuery}) T where cast(T.[{escapedSqlColumn}] as nvarchar(max)) like '%{escapedValue}%'";
+            return $"select * from ({baseQuery}) T where lower(cast(T.[{escapedSqlColumn}] as nvarchar(max))) like '%{escapedValue.ToLowerInvariant()}%'";
         }
 
         private static bool HasItem(Form form, string itemUid)
