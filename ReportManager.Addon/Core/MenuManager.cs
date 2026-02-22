@@ -2,6 +2,7 @@
 using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace ReportManager.Addon.Core
             _app = app ?? throw new ArgumentNullException(nameof(app));
         }
 
-        public void EnsurePopupWithEntry(string parentMenuId, string popupMenuId, string popupCaption, string childMenuId, string childCaption)
+        public void EnsurePopupWithEntry(string parentMenuId, string popupMenuId, string popupCaption, string childMenuId, string childCaption, string popupImagePath = null, string childImagePath = null)
         {
             if (string.IsNullOrWhiteSpace(parentMenuId))
                 throw new ArgumentException("parentMenuId es requerido.", nameof(parentMenuId));
@@ -34,7 +35,7 @@ namespace ReportManager.Addon.Core
                 popupParams.Type = BoMenuType.mt_POPUP;
                 popupParams.UniqueID = popupMenuId;
                 popupParams.String = popupCaption;
-                popupParams.Image = "";
+                popupParams.Image = ResolveMenuImagePath(popupImagePath);
                 _app.Menus.Item(parentMenuId).SubMenus.AddEx(popupParams);
             }
 
@@ -44,10 +45,21 @@ namespace ReportManager.Addon.Core
                 childParams.Type = BoMenuType.mt_STRING;
                 childParams.UniqueID = childMenuId;
                 childParams.String = childCaption;
-                childParams.Image = "";
+                childParams.Image = ResolveMenuImagePath(childImagePath);
                 _app.Menus.Item(popupMenuId).SubMenus.AddEx(childParams);
             }
         }
+
+        private static string ResolveMenuImagePath(string imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath))
+                return string.Empty;
+
+            return File.Exists(imagePath)
+                ? imagePath
+                : string.Empty;
+        }
+
     }
 
 }

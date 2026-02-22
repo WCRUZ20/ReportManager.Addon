@@ -29,6 +29,9 @@ namespace ReportManager.Addon.Core
 
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string srfPath = Path.Combine(baseDir, "Forms", "Principal.srf");
+            string mainMenuIconPath = Path.Combine(baseDir, "Resources", "rm_logo.png");
+            string subMenuIconPath = Path.Combine(baseDir, "Resources", "rm_logo.png");
+            string subMenuConfigIconPath = Path.Combine(baseDir, "Resources", "config_logo.png");
 
             var loader = new SrfFormLoader(_sap.App);
             var menuManager = new MenuManager(_sap.App);
@@ -37,13 +40,17 @@ namespace ReportManager.Addon.Core
                 PrincipalScreen.PopupMenuId,
                 "ReportManager",
                 PrincipalScreen.OpenPrincipalMenuId,
-                "Principal");
+                "Principal",
+                mainMenuIconPath,
+                subMenuIconPath);
             menuManager.EnsurePopupWithEntry(
                 SapTopMenuId,
                 PrincipalScreen.PopupMenuId,
                 "ReportManager",
                 PrincipalScreen.OpenConfigMenuId,
-                "Configuración");
+                "Configuración",
+                mainMenuIconPath,
+                subMenuConfigIconPath);
             _log.Info("Menú ReportManager registrado (Principal y Configuración).");
 
             var principalFormController = new PrincipalFormController(_sap.App, loader, srfPath, PrincipalScreen.FormUid);

@@ -63,6 +63,16 @@ namespace ReportManager.Addon.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap config_logo {
+            get {
+                object obj = ResourceManager.GetObject("config_logo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap rm_logo {
             get {
                 object obj = ResourceManager.GetObject("rm_logo", resourceCulture);
