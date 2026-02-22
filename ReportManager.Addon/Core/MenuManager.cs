@@ -1,4 +1,5 @@
-﻿using SAPbouiCOM;
+﻿using SAPbobsCOM;
+using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,7 @@ namespace ReportManager.Addon.Core
                 popupParams.Type = BoMenuType.mt_POPUP;
                 popupParams.UniqueID = popupMenuId;
                 popupParams.String = popupCaption;
+                popupParams.Image = "";
                 _app.Menus.Item(parentMenuId).SubMenus.AddEx(popupParams);
             }
 
@@ -42,6 +44,7 @@ namespace ReportManager.Addon.Core
                 childParams.Type = BoMenuType.mt_STRING;
                 childParams.UniqueID = childMenuId;
                 childParams.String = childCaption;
+                childParams.Image = "";
                 _app.Menus.Item(popupMenuId).SubMenus.AddEx(childParams);
             }
         }

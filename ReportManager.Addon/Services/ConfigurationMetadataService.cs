@@ -1,4 +1,5 @@
 ﻿using ReportManager.Addon.Logging;
+using ReportManager.Addon.Models;
 using SAPbobsCOM;
 using SAPbouiCOM;
 using System;
@@ -29,6 +30,12 @@ namespace ReportManager.Addon.Services
             _app.StatusBar.SetText("Estructura SS_DPTS validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
         }
 
+        public void CreateParamterTypeTable()
+        {
+            CreateUserTableIfNotExists("SS_PRMTYPE", "Tipos parámetros", BoUTBTableType.bott_NoObject);
+            _app.StatusBar.SetText("Estructura SS_PRMTYPE validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+        }
+
         public void CreateReportConfigurationStructures()
         {
             CreateParameterStructures();
@@ -38,37 +45,92 @@ namespace ReportManager.Addon.Services
 
         private void CreateParameterStructures()
         {
-            CreateUserTableIfNotExists("SS_PRMCAB", "Parametros Reporte Cab", BoUTBTableType.bott_MasterData);
-            CreateUserFieldIfNotExists("@SS_PRMCAB", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRMCAB", "SS_NOMBRPT", "Nombre Reporte", BoFieldTypes.db_Alpha, 50);
+            CreateUserTableIfNotExists("SS_PRM_CAB", "Parametros Reporte Cab", BoUTBTableType.bott_MasterData);
+            CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_NOMBRPT", "Nombre Reporte", BoFieldTypes.db_Alpha, 50);
 
-            CreateUserTableIfNotExists("SS_PRMDET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
-            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRMDET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
+            CreateUserTableIfNotExists("SS_PRM_DET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_TIPO", "Tipo parámetro", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMTYPE");
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_OBLIGA", "Obligatorio", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
-            RegisterMasterDataUdoIfNotExists(
-                "SS_PRMCAB",
-                "SS_PRMCAB",
-                "Parametrización de reportes",
-                "SS_PRMDET",
-                "U_SS_IDRPT");
+            var def = new UdoDefinition
+            {
+                Code = "SS_PRM_CAB",
+                Name = "Parametrización de reportes",
+                TableName = "SS_PRM_CAB",
+                ObjectType = BoUDOObjType.boud_MasterData,
+
+                CanFind = BoYesNoEnum.tYES,
+                CanCancel = BoYesNoEnum.tNO,
+                CanClose = BoYesNoEnum.tNO,
+                CanDelete = BoYesNoEnum.tYES,
+                CanCreateDefaultForm = BoYesNoEnum.tYES,
+                ManageSeries = BoYesNoEnum.tNO,
+                UseEnhancedFormColumns = true,
+                RebuildEnhancedForm = BoYesNoEnum.tYES,
+                EnableEnhancedForm = BoYesNoEnum.tYES,
+            };
+
+            def.FindColumns.Add(new UdoFindColumn { Alias = "Code", Description = "Código" });
+            def.FindColumns.Add(new UdoFindColumn { Alias = "U_SS_IDRPT", Description = "Id Reporte" });
+            def.FindColumns.Add(new UdoFindColumn { Alias = "U_SS_NOMBRPT", Description = "Nombre Reporte" });
+
+            def.ChildTables.Add(new UdoChildTable { TableName = "SS_PRM_DET" });
+
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "Code", Description = "Code", ChildNumber = 0, ColumnNumber = 1 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "Name", Description = "Name", ChildNumber = 0, ColumnNumber = 2 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDRPT", Description = "Id Reporte", ChildNumber = 0, ColumnNumber = 3 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_NOMBRPT", Description = "Nombre Reporte", ChildNumber = 0, ColumnNumber = 4 });
+
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDPARAM", Description = "Id Param", ChildNumber = 1, ColumnNumber = 1 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DSCPARAM", Description = "Descripción", ChildNumber = 1, ColumnNumber = 2 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "SS_TIPO", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 3 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "SS_OBLIGA", Description = "Obligatorio", ChildNumber = 1, ColumnNumber = 4 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 5 });
+
+            RegisterUdoIfNotExists(def);
         }
 
         private void CreateDefinitionStructures()
         {
-            CreateUserTableIfNotExists("SS_DFRPTCAB", "Definicion Reporte Cab", BoUTBTableType.bott_MasterData);
-            CreateUserFieldIfNotExists("@SS_DFRPTCAB", "SS_IDDPT", "Id Departamento", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_DPTS");
+            CreateUserTableIfNotExists("SS_DFRPT_CAB", "Definicion Reporte Cab", BoUTBTableType.bott_MasterData);
+            CreateUserFieldIfNotExists("@SS_DFRPT_CAB", "SS_IDDPT", "Id Departamento", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_DPTS");
 
-            CreateUserTableIfNotExists("SS_DFRPTDET", "Definicion Reporte Det", BoUTBTableType.bott_MasterDataLines);
-            CreateUserFieldIfNotExists("@SS_DFRPTDET", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMCAB");
+            CreateUserTableIfNotExists("SS_DFRPT_DET", "Definicion Reporte Det", BoUTBTableType.bott_MasterDataLines);
+            CreateUserFieldIfNotExists("@SS_DFRPT_DET", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRM_CAB");
 
-            RegisterMasterDataUdoIfNotExists(
-                "SS_DFRPTCAB",
-                "SS_DFRPTCAB",
-                "Definición de reportes",
-                "SS_DFRPTDET",
-                "U_SS_IDDPT");
+            var def = new UdoDefinition
+            {
+                Code = "SS_DFRPT_CAB",
+                Name = "Definición de reportes",
+                TableName = "SS_DFRPT_CAB",
+                ObjectType = BoUDOObjType.boud_MasterData,
+
+                CanFind = BoYesNoEnum.tYES,
+                CanCancel = BoYesNoEnum.tNO,
+                CanClose = BoYesNoEnum.tNO,
+                CanDelete = BoYesNoEnum.tYES,
+                CanCreateDefaultForm = BoYesNoEnum.tYES,
+                UseEnhancedFormColumns = true,
+                RebuildEnhancedForm = BoYesNoEnum.tYES,
+                EnableEnhancedForm = BoYesNoEnum.tYES,
+            };
+
+            def.FindColumns.Add(new UdoFindColumn { Alias = "Code", Description = "Código" });
+            def.FindColumns.Add(new UdoFindColumn { Alias = "U_SS_IDDPT", Description = "Departamento" });
+
+            def.ChildTables.Add(new UdoChildTable { TableName = "SS_DFRPT_DET" });
+
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "Code", Description = "Código", ChildNumber = 0, ColumnNumber = 1 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "Name", Description = "Nombre", ChildNumber = 0, ColumnNumber = 2 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDDPT", Description = "Departamento", ChildNumber = 0, ColumnNumber = 3 });
+
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDRPT", Description = "Reporte", ChildNumber = 1, ColumnNumber = 1 });
+
+            RegisterUdoIfNotExists(def);
         }
 
         private void  CreateUserTableIfNotExists(string tableName, string description, BoUTBTableType type)
@@ -161,6 +223,7 @@ namespace ReportManager.Addon.Services
                     fields.ValidValues.Add();
                     fields.ValidValues.Value = validValueNo;
                     fields.ValidValues.Description = "No";
+                    fields.ValidValues.Add();
                     fields.DefaultValue = validValueYes;
                 }
 
@@ -174,53 +237,143 @@ namespace ReportManager.Addon.Services
             }
         }
 
-        private void RegisterMasterDataUdoIfNotExists(string code, string tableName, string name, string childTableName, string referenceFieldAlias)
+        private void RegisterUdoIfNotExists(UdoDefinition def)
         {
+            if (def == null) throw new ArgumentNullException(nameof(def));
+            if (string.IsNullOrWhiteSpace(def.Code)) throw new ArgumentException("Code requerido.");
+            if (string.IsNullOrWhiteSpace(def.Name)) throw new ArgumentException("Name requerido.");
+            if (string.IsNullOrWhiteSpace(def.TableName)) throw new ArgumentException("TableName requerido.");
+
             UserObjectsMD udo = null;
-            Recordset recordset = null;
+            Recordset rs = null;
 
             try
             {
-                //var company = GetCompany();
-                recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
-                recordset.DoQuery("SELECT TOP 1 1 FROM OUDO WHERE Code = '" + code + "'");
+                rs = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                rs.DoQuery("SELECT TOP 1 1 FROM OUDO WHERE Code = '" + def.Code.Replace("'", "''") + "'");
+                if (!rs.EoF) return;
 
-                if (!recordset.EoF)
-                {
-                    return;
-                }
-
-                ReleaseComObject(recordset);
-                recordset = null;
+                ReleaseComObject(rs);
+                rs = null;
 
                 udo = (UserObjectsMD)_company.GetBusinessObject(BoObjectTypes.oUserObjectsMD);
-                udo.Code = code;
-                udo.Name = name;
-                udo.ObjectType = BoUDOObjType.boud_MasterData;
-                udo.TableName = tableName;
-                udo.CanFind = BoYesNoEnum.tYES;
-                udo.CanCancel = BoYesNoEnum.tNO;
-                udo.CanClose = BoYesNoEnum.tNO;
-                udo.CanDelete = BoYesNoEnum.tYES;
-                udo.CanCreateDefaultForm = BoYesNoEnum.tYES;
-                udo.CanYearTransfer = BoYesNoEnum.tNO;
-                udo.ManageSeries = BoYesNoEnum.tNO;
 
-                udo.FindColumns.ColumnAlias = "Code";
-                udo.FindColumns.ColumnDescription = "Código";
-                udo.FindColumns.Add();
-                udo.FindColumns.ColumnAlias = referenceFieldAlias;
-                udo.FindColumns.ColumnDescription = "Referencia";
+                udo.Code = def.Code;
+                udo.Name = def.Name;
+                udo.ObjectType = def.ObjectType;
+                udo.TableName = def.TableName; // SIN @
 
-                udo.ChildTables.TableName = childTableName;
+                udo.CanFind = def.CanFind;
+                udo.CanCancel = def.CanCancel;
+                udo.CanClose = def.CanClose;
+                udo.CanDelete = def.CanDelete;
+                udo.CanCreateDefaultForm = def.CanCreateDefaultForm;
+                udo.CanYearTransfer = def.CanYearTransfer;
+                udo.ManageSeries = def.ManageSeries;
 
-                AddMetadata(udo, "No se pudo registrar UDO " + code + ".");
-                _log.Info("UDO registrado: " + code);
+                if (def.UseLog == BoYesNoEnum.tYES)
+                {
+                    udo.CanLog = BoYesNoEnum.tYES;
+                    if (!string.IsNullOrWhiteSpace(def.LogTableName))
+                        udo.LogTableName = def.LogTableName;
+                }
+
+                udo.EnableEnhancedForm = def.EnableEnhancedForm;
+                udo.RebuildEnhancedForm = def.RebuildEnhancedForm;
+
+                AddFindColumns(udo, def.FindColumns);
+
+                AddChildTables(udo, def.ChildTables);
+
+                AddFormColumns(udo, def.FormColumns);
+
+                if (def.UseEnhancedFormColumns)
+                {
+                    AddEnhancedFormColumns(udo, def.EnhancedFormColumns);
+                }
+
+                AddMetadata(udo, "No se pudo registrar UDO " + def.Code + ".");
+                _log.Info("UDO registrado: " + def.Code);
             }
             finally
             {
-                ReleaseComObject(recordset);
+                ReleaseComObject(rs);
                 ReleaseComObject(udo);
+            }
+        }
+
+        private void AddFindColumns(UserObjectsMD udo, List<UdoFindColumn> cols)
+        {
+            if (cols == null || cols.Count == 0) return;
+
+            for (int i = 0; i < cols.Count; i++)
+            {
+                var c = cols[i];
+                if (c == null || string.IsNullOrWhiteSpace(c.Alias)) continue;
+
+                udo.FindColumns.ColumnAlias = c.Alias;
+                udo.FindColumns.ColumnDescription = string.IsNullOrWhiteSpace(c.Description) ? c.Alias : c.Description;
+
+                if (i < cols.Count - 1)
+                    udo.FindColumns.Add();
+            }
+        }
+
+        private void AddChildTables(UserObjectsMD udo, List<UdoChildTable> childs)
+        {
+            if (childs == null || childs.Count == 0) return;
+
+            for (int i = 0; i < childs.Count; i++)
+            {
+                var ct = childs[i];
+                if (ct == null || string.IsNullOrWhiteSpace(ct.TableName)) continue;
+
+                udo.ChildTables.TableName = ct.TableName; // SIN @
+                if (i < childs.Count - 1)
+                    udo.ChildTables.Add();
+            }
+        }
+
+        private void AddFormColumns(UserObjectsMD udo, List<UdoFormColumn> cols)
+        {
+            if (cols == null || cols.Count == 0) return;
+
+            for (int i = 0; i < cols.Count; i++)
+            {
+                var c = cols[i];
+                if (c == null || string.IsNullOrWhiteSpace(c.Alias)) continue;
+
+                udo.FormColumns.FormColumnAlias = c.Alias;
+                udo.FormColumns.FormColumnDescription = string.IsNullOrWhiteSpace(c.Description) ? c.Alias : c.Description;
+                udo.FormColumns.Editable = BoYesNoEnum.tYES;
+
+                udo.FormColumns.SonNumber = c.SonNumber;
+
+                if (i < cols.Count - 1)
+                    udo.FormColumns.Add();
+            }
+        }
+
+        private void AddEnhancedFormColumns(UserObjectsMD udo, List<UdoEnhancedFormColumn> cols)
+        {
+            if (cols == null || cols.Count == 0) return;
+
+            for (int i = 0; i < cols.Count; i++)
+            {
+                var c = cols[i];
+                if (c == null || string.IsNullOrWhiteSpace(c.Alias)) continue;
+
+                udo.EnhancedFormColumns.ColumnAlias = c.Alias;
+                udo.EnhancedFormColumns.ColumnDescription = string.IsNullOrWhiteSpace(c.Description) ? c.Alias : c.Description;
+
+                udo.EnhancedFormColumns.Editable = BoYesNoEnum.tYES;
+                udo.EnhancedFormColumns.ColumnIsUsed = BoYesNoEnum.tYES;
+
+                udo.EnhancedFormColumns.ChildNumber = c.ChildNumber;     // 0 cabecera, 1..n hijas
+                udo.EnhancedFormColumns.ColumnNumber = c.ColumnNumber;   // 1..n  (NO 0)
+
+                if (i < cols.Count - 1)
+                    udo.EnhancedFormColumns.Add();
             }
         }
 

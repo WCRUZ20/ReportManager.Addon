@@ -100,6 +100,7 @@ namespace ReportManager.Addon.Screens
                     if (pVal.ItemUID == "btn_dpts")
                     {
                         _configurationMetadataService.CreateDepartmentTable();
+                        _configurationMetadataService.CreateParamterTypeTable();
                         return;
                     }
 
@@ -119,7 +120,9 @@ namespace ReportManager.Addon.Screens
 
         private void OpenConfigurationLoginForm()
         {
-            var existing = TryGetOpenForm(LoginFormUid);
+            var existing = TryGetOpenForm(LoginFormUid)?? TryGetOpenForm(ConfigFormUid);
+            //var isconfigopen = TryGetOpenForm(ConfigFormUid);
+
             if (existing != null)
             {
                 existing.Visible = true;
@@ -188,7 +191,7 @@ namespace ReportManager.Addon.Screens
             form.Width = 460;
             form.Height = 200;
 
-            AddButton(form, "btn_dpts", "Crear tabla ss_dpts", 20, 30, 190);
+            AddButton(form, "btn_dpts", "Crear tabla ss_dpts y ss_prmtypes", 20, 30, 190);
             AddButton(form, "btn_udos", "Crear estructuras y UDO", 220, 30, 200);
 
             AddStaticText(form, "lbl_inf", "Ejecute primero ss_dpts y luego estructuras maestras.", 20, 70, 400);
