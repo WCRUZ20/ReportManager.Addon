@@ -19,6 +19,8 @@ namespace ReportManager.Addon.Services
         private const string QueryResultGridUid = "grd_qry";
         private const string QueryResultDataTableUid = "DT_QRY";
         private const string QueryResultSourceDataSource = "UD_SRC";
+        private const string GenerateReportButtonUid = "btn_exerpt";
+        private const string GenerateReportButtonCaption = "Generar reporte";
         private const int ParameterRowHeight = 24;
         private const int MappingFormMinHeight = 180;
         private const int MappingFormBottomPadding = 72;
@@ -68,7 +70,7 @@ namespace ReportManager.Addon.Services
             var creationParams = (FormCreationParams)_app.CreateObject(BoCreatableObjectType.cot_FormCreationParams);
             creationParams.UniqueID = uid;
             creationParams.FormType = MappingFormType;
-            creationParams.BorderStyle = BoFormBorderStyle.fbs_Sizable;
+            creationParams.BorderStyle = BoFormBorderStyle.fbs_Fixed;
 
             var form = _app.Forms.AddEx(creationParams);
             form.Title = "Parámetros de reporte";
@@ -83,6 +85,7 @@ namespace ReportManager.Addon.Services
             ((StaticText)headerItem.Specific).Caption = $"Reporte: {reportCode} - {reportName}";
 
             RenderParameters(form, parameters);
+            AddGenerateReportButton(form, parameters.Count);
             ResizeMappingFormHeight(form, parameters.Count);
 
             form.Visible = true;
@@ -157,7 +160,7 @@ namespace ReportManager.Addon.Services
             var gridItem = form.Items.Add(QueryResultGridUid, BoFormItemTypes.it_GRID);
             gridItem.Left = 10;
             gridItem.Top = 10;
-            gridItem.Width = 520;
+            gridItem.Width = 500;
             gridItem.Height = 330;
 
             var grid = (Grid)gridItem.Specific;
@@ -165,6 +168,7 @@ namespace ReportManager.Addon.Services
             dt.ExecuteQuery(context.Query);
             grid.DataTable = dt;
             grid.SelectionMode = BoMatrixSelect.ms_Single;
+            grid.Item.Enabled = false;
             grid.AutoResizeColumns();
 
             var source = sourceFormUid + "|" + context.ValueItemUid;
@@ -311,7 +315,7 @@ namespace ReportManager.Addon.Services
                     var descItem = form.Items.Add(descUid, BoFormItemTypes.it_EDIT);
                     descItem.Left = hasQuery ? baseLeft + 260 : baseLeft + 230;
                     descItem.Top = nextTop;
-                    descItem.Width = 220;
+                    descItem.Width = 250;
                     descItem.Enabled = false;
                 }
 
@@ -339,6 +343,18 @@ namespace ReportManager.Addon.Services
             var rowsHeight = Math.Max(parameterCount, 1) * ParameterRowHeight;
             var calculatedHeight = MappingFormBottomPadding + rowsHeight;
             form.Height = Math.Max(MappingFormMinHeight, calculatedHeight);
+        }
+
+        private void AddGenerateReportButton(Form form, int parameterCount)
+        {
+            var rowsHeight = Math.Max(parameterCount, 1) * ParameterRowHeight;
+            var buttonTop = 42 + rowsHeight;
+
+            var buttonItem = form.Items.Add(GenerateReportButtonUid, BoFormItemTypes.it_BUTTON);
+            buttonItem.Left = 400;
+            buttonItem.Top = buttonTop;
+            buttonItem.Width = 120;
+            ((Button)buttonItem.Specific).Caption = GenerateReportButtonCaption;
         }
 
         private string ExecuteScalar(string query)
