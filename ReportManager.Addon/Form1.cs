@@ -31,6 +31,7 @@ namespace ReportManager.Addon
             };
 
             Controls.Add(_viewer);
+            _viewer.Show();
         }
     }
 }
