@@ -84,7 +84,7 @@ namespace ReportManager.Addon.Services
             return string.Equals(itemUid, GenerateReportButtonUid, StringComparison.OrdinalIgnoreCase);
         }
 
-        public System.Windows.Forms.Form GenerateSelectedReport(string mappingFormUid)
+        public void GenerateSelectedReport(string mappingFormUid)
         {
             try
             {
@@ -93,46 +93,54 @@ namespace ReportManager.Addon.Services
                 if (reportInfo == null)
                 {
                     _app.StatusBar.SetText("No se pudo identificar el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                    return null;
+                    return;
                 }
 
                 var reportFilePath = ResolveReportFilePath(reportInfo.ReportCode, reportInfo.ReportName);
                 if (string.IsNullOrWhiteSpace(reportFilePath))
                 {
                     _app.StatusBar.SetText("No se encontró el archivo de Crystal Report para el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                    return null;
+                    return;
                 }
 
                 var parameterDefinitions = GetReportParameters(reportInfo.ReportCode);
                 var parameterValues = BuildParameterValues(form, parameterDefinitions);
 
-                var reportViewerForm = CreateCrystalViewerForm(reportFilePath, parameterValues);
+                OpenCrystalViewerOnStaThread(reportFilePath, parameterValues);
 
                 _app.StatusBar.SetText("Reporte abierto correctamente.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
-                return reportViewerForm;
+                return;
             }
             catch (Exception ex)
             {
                 _log.Error("No se pudo abrir el Crystal Report seleccionado.", ex);
                 _app.StatusBar.SetText("No se pudo abrir el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                return null;
             }
         }
 
-        private System.Windows.Forms.Form CreateCrystalViewerForm(string reportFilePath, Dictionary<string, object> parameterValues)
+        private void OpenCrystalViewerOnStaThread(string reportFilePath, Dictionary<string, object> parameterValues)
         {
-            var localReportDocument = new ReportDocument();
-            try
+            var viewerThread = new Thread(() =>
             {
-                localReportDocument.Load(reportFilePath);
-                ApplyParameters(localReportDocument, parameterValues);
-                return new CrystalReportViewerForm(localReportDocument);
-            }
-            catch
-            {
-                localReportDocument.Dispose();
-                throw;
-            }
+                ReportDocument localReportDocument = null;
+                try
+                {
+                    localReportDocument = new ReportDocument();
+                    localReportDocument.Load(reportFilePath);
+                    ApplyParameters(localReportDocument, parameterValues);
+
+                    System.Windows.Forms.Application.Run(new CrystalReportViewerForm(localReportDocument));
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("No se pudo abrir el visor de Crystal Reports en hilo STA.", ex);
+                    localReportDocument?.Dispose();
+                }
+            });
+
+            viewerThread.IsBackground = true;
+            viewerThread.SetApartmentState(ApartmentState.STA);
+            viewerThread.Start();
         }
 
         private void OpenOrRefreshMappingForm(string parentFormUid, string reportCode, string reportName, List<ReportParameterDefinition> parameters)

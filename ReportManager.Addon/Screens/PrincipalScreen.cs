@@ -155,22 +155,17 @@ namespace ReportManager.Addon.Screens
                     && pVal.ActionSuccess
                     && _reportParameterMapper.IsGenerateReportButton(pVal.ItemUID))
                 {
-                    // Incrusta el formulario de reporte generado dentro del host SAP.
+                    _reportParameterMapper.GenerateSelectedReport(formUID);
+
+                    // NUEVO: incrustar Form1 dentro de SAP (host SAP + SetParent)
                     try
                     {
-                        var reportForm = _reportParameterMapper.GenerateSelectedReport(formUID);
-                        //reportForm.Show();
-                        if (reportForm == null)
-                        {
-                            return;
-                        }
-
                         var host = _embeddedRegistry.GetOrCreate(_app, _log, EmbeddedHostFormUid, EmbeddedHostTitle);
-                        host.ShowOrFocus(() => reportForm, width: 900, height: 650);
+                        host.ShowOrFocus(() => new ReportManager.Addon.Form1(), width: 900, height: 650);
                     }
                     catch (Exception ex)
                     {
-                        _log.Error("No se pudo incrustar el visor de reporte.", ex);
+                        _log.Error("No se pudo incrustar Form1.", ex);
                         _app.StatusBar.SetText("No se pudo incrustar el formulario de reporte: " + ex.Message,
                             BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
                     }
