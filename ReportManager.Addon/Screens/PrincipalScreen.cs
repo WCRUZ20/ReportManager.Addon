@@ -45,6 +45,8 @@ namespace ReportManager.Addon.Screens
         private const string EmbeddedNameValueUid = "txt_rptnam";
         private const string ParentFormDataSourceUid = "UD_PARENT";
 
+        private Form1 formPrueba;
+
         public PrincipalScreen(
             Application app,
             Logger log,

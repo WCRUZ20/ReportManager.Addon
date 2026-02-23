@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ReportManager.Addon.Services
@@ -33,7 +34,6 @@ namespace ReportManager.Addon.Services
         private const int ParameterRowHeight = 24;
         private const int MappingFormMinHeight = 180;
         private const int MappingFormBottomPadding = 72;
-        private ReportDocument reportDocument;
 
         private readonly Application _app;
         private readonly Logger _log;
@@ -42,6 +42,7 @@ namespace ReportManager.Addon.Services
         private readonly Dictionary<string, QueryPickerContext> _queryPickerContexts = new Dictionary<string, QueryPickerContext>(StringComparer.OrdinalIgnoreCase);
 
         private string _mappingFormUid;
+        //private Form1 formPrueba;
 
         public ReportParameterMapper(Application app, Logger log, SAPbobsCOM.Company company)
         {
@@ -105,12 +106,7 @@ namespace ReportManager.Addon.Services
                 var parameterDefinitions = GetReportParameters(reportInfo.ReportCode);
                 var parameterValues = BuildParameterValues(form, parameterDefinitions);
 
-                reportDocument = new ReportDocument();
-                reportDocument.Load(reportFilePath);
-                //ApplyParameters(reportDocument, parameterValues);
-
-                var viewerForm = new CrystalReportViewerForm(reportDocument);
-                viewerForm.Show();
+                OpenCrystalViewerOnStaThread(reportFilePath, parameterValues);
 
                 _app.StatusBar.SetText("Reporte abierto correctamente.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
             }
@@ -119,6 +115,31 @@ namespace ReportManager.Addon.Services
                 _log.Error("No se pudo abrir el Crystal Report seleccionado.", ex);
                 _app.StatusBar.SetText("No se pudo abrir el reporte seleccionado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
+        }
+
+        private void OpenCrystalViewerOnStaThread(string reportFilePath, Dictionary<string, object> parameterValues)
+        {
+            var viewerThread = new Thread(() =>
+            {
+                ReportDocument localReportDocument = null;
+                try
+                {
+                    localReportDocument = new ReportDocument();
+                    localReportDocument.Load(reportFilePath);
+                    //ApplyParameters(localReportDocument, parameterValues);
+
+                    System.Windows.Forms.Application.Run(new CrystalReportViewerForm(localReportDocument));
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("No se pudo abrir el visor de Crystal Reports en hilo STA.", ex);
+                    localReportDocument?.Dispose();
+                }
+            });
+
+            viewerThread.IsBackground = true;
+            viewerThread.SetApartmentState(ApartmentState.STA);
+            viewerThread.Start();
         }
 
         private void OpenOrRefreshMappingForm(string parentFormUid, string reportCode, string reportName, List<ReportParameterDefinition> parameters)
