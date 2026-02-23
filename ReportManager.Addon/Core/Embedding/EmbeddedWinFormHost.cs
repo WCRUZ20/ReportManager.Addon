@@ -29,6 +29,16 @@ namespace ReportManager.Addon.Core.Embedding
         public void ShowOrFocus<TWinForm>(Func<TWinForm> factory, int width, int height)
             where TWinForm : System.Windows.Forms.Form
         {
+            ShowOrFocusInternal(() => factory(), width, height);
+        }
+
+        public void ShowOrFocus(Func<System.Windows.Forms.Form> factory, int width, int height)
+        {
+            ShowOrFocusInternal(factory, width, height);
+        }
+
+        private void ShowOrFocusInternal(Func<System.Windows.Forms.Form> factory, int width, int height)
+        {
             // Si ya está vivo, solo enfoca el SAP host
             if (IsAlive())
             {
