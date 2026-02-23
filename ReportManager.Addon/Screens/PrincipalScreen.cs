@@ -503,14 +503,12 @@ namespace ReportManager.Addon.Screens
         {
             if (_company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
             {
-                return "select T1.\"U_SS_IDRPT\", T2.\"U_SS_NOMBRPT\"from \"@SS_DFRPT_CAB\" T0 inner join \"@SS_DFRPT_DET\" T1 ON T0.\"Code\" = T1.\"Code\" inner join \"@SS_PRM_CAB\" T2 ON T1.\"U_SS_IDRPT\" = T2.\"Code\" where T0.\"U_SS_IDDPT\" = 'departmentCode' order by 1";
+                return "select T2.\"U_SS_IDRPT\", T2.\"U_SS_NOMBRPT\"from \"@SS_PRM_CAB\" T2 where T2.\"U_SS_IDDPT\" = 'departmentCode' order by 1";
             }
 
-            return $@"select T1.U_SS_IDRPT, T2.U_SS_NOMBRPT
-                from [@SS_DFRPT_CAB] T0
-                inner join [@SS_DFRPT_DET] T1 ON T0.Code = T1.Code
-                inner join [@SS_PRM_CAB] T2 ON T1.U_SS_IDRPT = T2.Code
-                where T0.U_SS_IDDPT = '{departmentCode}'
+            return $@"select T2.U_SS_IDRPT, T2.U_SS_NOMBRPT
+                from join [@SS_PRM_CAB] T2 
+                where T2.U_SS_IDDPT = '{departmentCode}'
                 order by 1";
         }
 

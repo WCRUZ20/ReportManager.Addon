@@ -39,7 +39,7 @@ namespace ReportManager.Addon.Services
         public void CreateReportConfigurationStructures()
         {
             CreateParameterStructures();
-            CreateDefinitionStructures();
+            //CreateDefinitionStructures();
             _app.StatusBar.SetText("Estructuras maestras y UDOs validadas.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
         }
 
