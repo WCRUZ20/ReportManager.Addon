@@ -14,36 +14,38 @@ namespace ReportManager.Addon.Forms
 {
     public sealed partial class CrystalReportViewerForm : Form
     {
-        private readonly ReportDocument _reportDocument;
-        private readonly CrystalReportViewer _viewer;
+        //private readonly ReportDocument _reportDocument;
+        //private readonly CrystalReportViewer _viewer;
 
         public CrystalReportViewerForm(ReportDocument reportDocument)
         {
-            _reportDocument = reportDocument ?? throw new ArgumentNullException(nameof(reportDocument));
+            //_reportDocument = reportDocument ?? throw new ArgumentNullException(nameof(reportDocument));
 
             Text = "Visualizador Crystal Reports";
             Width = 1024;
             Height = 768;
             StartPosition = FormStartPosition.CenterScreen;
 
-            _viewer = new CrystalReportViewer
-            {
-                Dock = DockStyle.Fill,
-                ToolPanelView = ToolPanelViewType.None,
-                ShowGroupTreeButton = false,
-                ShowParameterPanelButton = true,
-                ReuseParameterValuesOnRefresh = true,
-                ReportSource = _reportDocument,
-            };
+            //_viewer = new CrystalReportViewer
+            //{
+            //    Dock = DockStyle.Fill,
+            //    ToolPanelView = ToolPanelViewType.None,
+            //    ShowGroupTreeButton = true,
+            //    ShowParameterPanelButton = true,
+            //    ReuseParameterValuesOnRefresh = true,
+            //    ReportSource = _reportDocument,
+            //};
 
-            Controls.Add(_viewer);
+            //Controls.Add(_viewer);
+            //_viewer.Show();
+            //_viewer.Refresh();
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
-            _viewer.ReportSource = null;
-            _reportDocument.Close();
-            _reportDocument.Dispose();
+            //_viewer.ReportSource = null;
+            //_reportDocument.Close();
+            //_reportDocument.Dispose();
             base.OnFormClosed(e);
         }
     }

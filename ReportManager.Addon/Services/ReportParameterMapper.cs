@@ -33,6 +33,7 @@ namespace ReportManager.Addon.Services
         private const int ParameterRowHeight = 24;
         private const int MappingFormMinHeight = 180;
         private const int MappingFormBottomPadding = 72;
+        private ReportDocument reportDocument;
 
         private readonly Application _app;
         private readonly Logger _log;
@@ -104,9 +105,9 @@ namespace ReportManager.Addon.Services
                 var parameterDefinitions = GetReportParameters(reportInfo.ReportCode);
                 var parameterValues = BuildParameterValues(form, parameterDefinitions);
 
-                var reportDocument = new ReportDocument();
+                reportDocument = new ReportDocument();
                 reportDocument.Load(reportFilePath);
-                ApplyParameters(reportDocument, parameterValues);
+                //ApplyParameters(reportDocument, parameterValues);
 
                 var viewerForm = new CrystalReportViewerForm(reportDocument);
                 viewerForm.Show();

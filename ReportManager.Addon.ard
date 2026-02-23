@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AddOnRegData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" SlientInstallation="No" SlientUpgrade="No" Partnernmsp="SOLSAP S.A" SchemaVersion="3.0" Type="" MultipleVersion="false" OnDemand="" OnPremise="" ExtName="eLocalizacion_V1.3.4.3.BETA2" ExtVersion="1.3.4.3" Contdata="" Partner="SOLSAP S.A" DBType="Both" ClientType="A">
+  <Validity>
+    <SBOCompatibility>
+      <Version From="920.200.00" To="1000.250.00" />
+    </SBOCompatibility>
+  </Validity>
+  <Configuration>
+    <Repository>
+      <Properties />
+    </Repository>
+    <Deployment>
+      <Properties />
+    </Deployment>
+    <Assignment>
+      <Properties />
+    </Assignment>
+  </Configuration>
+  <Addons>
+    <Addon Name="" Group="" ForceFlag="" Visible="" AutoAssign="" SelfUpgrd="">
+      <x86 AddonExe="" AddonSig="" AddonSigSha256="">
+        <Installation>
+          <Files />
+        </Installation>
+        <Uninstallation>
+          <Files />
+        </Uninstallation>
+      </x86>
+      <x64 AddonExe="C:\Users\WILLIAMC\source\repos\ReportManager.Addon\ReportManager.Addon\bin\x64\Debug\ReportManager.Addon.exe" AddonSig="">
+        <Installation>
+          <Files>
+            <File FileName="ADODB.dll">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.dll">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.pdb">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.xml">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.CrystalReports.Engine.dll">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.ReportSource.dll">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.Shared.dll">
+              <Actions />
+            </File>
+            <File FileName="DocumentFormat.OpenXml.dll">
+              <Actions />
+            </File>
+            <File FileName="DocumentFormat.OpenXml.xml">
+              <Actions />
+            </File>
+            <File FileName="Entidades.dll">
+              <Actions />
+            </File>
+            <File FileName="Entidades.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Entidades.pdb">
+              <Actions />
+            </File>
+            <File FileName="Entidades.xml">
+              <Actions />
+            </File>
+            <File FileName="ExcelNumberFormat.dll">
+              <Actions />
+            </File>
+            <File FileName="ExcelNumberFormat.xml">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.dll">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.pdb">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.xml">
+              <Actions />
+            </File>
+            <File FileName="SAPBusinessOneSDK.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.Sinks.File.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.Sinks.File.xml">
+              <Actions />
+            </File>
+            <File FileName="Serilog.xml">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.exe">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.exe.config">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.pdb">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.xml">
+              <Actions />
+            </File>
+            <File FileName="stdole.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Buffers.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Buffers.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Diagnostics.DiagnosticSource.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Diagnostics.DiagnosticSource.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Memory.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Memory.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Numerics.Vectors.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Numerics.Vectors.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Runtime.CompilerServices.Unsafe.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Runtime.CompilerServices.Unsafe.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Channels.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Channels.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Tasks.Extensions.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Tasks.Extensions.xml">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.dll">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.pdb">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.xml">
+              <Actions />
+            </File>
+            <File FileName="Iconos\logish.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\LogoLoc.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\LogoSS.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\SRI.jpg">
+              <Actions />
+            </File>
+            <File FileName="Librerias\ClosedXML.dll">
+              <Actions />
+            </File>
+            <File FileName="Librerias\ClosedXML.Parser.dll">
+              <Actions />
+            </File>
+            <File FileName="Librerias\SAPBusinessOneSDK.dll">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAcercaDeLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAnexoCompras.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAnexoVentas.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmCargaRPT.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmChequeP.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmChequePD.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmClave.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConfClaveLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConfMenuLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaBodega.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaDetalleTrans.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaDetalleTrans3.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaSalidaEntrada.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultasDbLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmDinardap.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGeneradorATS.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGenerarRPT.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGuiasRemision.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmLimpio.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmParametrosAddonLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmSRI.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmSRIConsulta.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmTransEntreCompanias.srf">
+              <Actions />
+            </File>
+          </Files>
+        </Installation>
+        <Uninstallation>
+          <Files>
+            <File FileName="ADODB.dll">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.dll">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.pdb">
+              <Actions />
+            </File>
+            <File FileName="ClosedXML.xml">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.CrystalReports.Engine.dll">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.ReportSource.dll">
+              <Actions />
+            </File>
+            <File FileName="CrystalDecisions.Shared.dll">
+              <Actions />
+            </File>
+            <File FileName="DocumentFormat.OpenXml.dll">
+              <Actions />
+            </File>
+            <File FileName="DocumentFormat.OpenXml.xml">
+              <Actions />
+            </File>
+            <File FileName="Entidades.dll">
+              <Actions />
+            </File>
+            <File FileName="Entidades.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Entidades.pdb">
+              <Actions />
+            </File>
+            <File FileName="Entidades.xml">
+              <Actions />
+            </File>
+            <File FileName="ExcelNumberFormat.dll">
+              <Actions />
+            </File>
+            <File FileName="ExcelNumberFormat.xml">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.dll">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.pdb">
+              <Actions />
+            </File>
+            <File FileName="Funciones_SAP.xml">
+              <Actions />
+            </File>
+            <File FileName="SAPBusinessOneSDK.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.Sinks.File.dll">
+              <Actions />
+            </File>
+            <File FileName="Serilog.Sinks.File.xml">
+              <Actions />
+            </File>
+            <File FileName="Serilog.xml">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.exe">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.exe.config">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.pdb">
+              <Actions />
+            </File>
+            <File FileName="slnLocalizacionEcuador.xml">
+              <Actions />
+            </File>
+            <File FileName="stdole.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Buffers.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Buffers.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Diagnostics.DiagnosticSource.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Diagnostics.DiagnosticSource.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Memory.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Memory.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Numerics.Vectors.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Numerics.Vectors.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Runtime.CompilerServices.Unsafe.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Runtime.CompilerServices.Unsafe.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Channels.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Channels.xml">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Tasks.Extensions.dll">
+              <Actions />
+            </File>
+            <File FileName="System.Threading.Tasks.Extensions.xml">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.dll">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.dll.config">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.pdb">
+              <Actions />
+            </File>
+            <File FileName="Utilitario.xml">
+              <Actions />
+            </File>
+            <File FileName="Iconos\logish.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\LogoLoc.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\LogoSS.png">
+              <Actions />
+            </File>
+            <File FileName="Iconos\SRI.jpg">
+              <Actions />
+            </File>
+            <File FileName="Librerias\ClosedXML.dll">
+              <Actions />
+            </File>
+            <File FileName="Librerias\ClosedXML.Parser.dll">
+              <Actions />
+            </File>
+            <File FileName="Librerias\SAPBusinessOneSDK.dll">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAcercaDeLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAnexoCompras.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmAnexoVentas.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmCargaRPT.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmChequeP.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmChequePD.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmClave.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConfClaveLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConfMenuLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaBodega.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaDetalleTrans.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaDetalleTrans3.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultaSalidaEntrada.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmConsultasDbLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmDinardap.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGeneradorATS.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGenerarRPT.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmGuiasRemision.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmLimpio.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmParametrosAddonLE.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmSRI.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmSRIConsulta.srf">
+              <Actions />
+            </File>
+            <File FileName="SRF\frmTransEntreCompanias.srf">
+              <Actions />
+            </File>
+          </Files>
+        </Uninstallation>
+      </x64>
+    </Addon>
+  </Addons>
+  <XApps>
+    <XApp Name="" Path="" FileName="" />
+  </XApps>
+  <UDQs>
+    <UDQ udqname="">
+      <Hana FileName="" />
+    </UDQ>
+  </UDQs>
+</AddOnRegData>

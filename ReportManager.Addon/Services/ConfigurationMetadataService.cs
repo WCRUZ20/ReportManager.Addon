@@ -48,6 +48,8 @@ namespace ReportManager.Addon.Services
             CreateUserTableIfNotExists("SS_PRM_CAB", "Parametros Reporte Cab", BoUTBTableType.bott_MasterData);
             CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_IDRPT", "Id Reporte", BoFieldTypes.db_Alpha, 50);
             CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_NOMBRPT", "Nombre Reporte", BoFieldTypes.db_Alpha, 50);
+            CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_IDDPT", "Id Departamento", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_DPTS");
+            CreateUserFieldIfNotExists("@SS_PRM_CAB", "SS_ACTIVO", "Rpt Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
             CreateUserTableIfNotExists("SS_PRM_DET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
@@ -87,6 +89,8 @@ namespace ReportManager.Addon.Services
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "Name", Description = "Name", ChildNumber = 0, ColumnNumber = 2 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDRPT", Description = "Id Reporte", ChildNumber = 0, ColumnNumber = 3 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_NOMBRPT", Description = "Nombre Reporte", ChildNumber = 0, ColumnNumber = 4 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDDPT", Description = "Departamento", ChildNumber = 0, ColumnNumber = 5 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Rpt Activo", ChildNumber = 0, ColumnNumber = 6 });
 
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDPARAM", Description = "Id Param", ChildNumber = 1, ColumnNumber = 1 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DSCPARAM", Description = "Descripción", ChildNumber = 1, ColumnNumber = 2 });
