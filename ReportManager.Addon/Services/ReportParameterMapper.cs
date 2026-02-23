@@ -126,7 +126,7 @@ namespace ReportManager.Addon.Services
                 {
                     localReportDocument = new ReportDocument();
                     localReportDocument.Load(reportFilePath);
-                    //ApplyParameters(localReportDocument, parameterValues);
+                    ApplyParameters(localReportDocument, parameterValues);
 
                     System.Windows.Forms.Application.Run(new CrystalReportViewerForm(localReportDocument));
                 }
