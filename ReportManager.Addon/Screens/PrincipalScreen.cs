@@ -1,4 +1,5 @@
 ﻿using ReportManager.Addon.Core;
+using ReportManager.Addon.Core.Embedding;
 using ReportManager.Addon.Entidades;
 using ReportManager.Addon.Logging;
 using ReportManager.Addon.Services;
@@ -46,6 +47,9 @@ namespace ReportManager.Addon.Screens
         private const string ParentFormDataSourceUid = "UD_PARENT";
 
         private Form1 formPrueba;
+        private readonly EmbeddedWinFormRegistry _embeddedRegistry = new EmbeddedWinFormRegistry();
+        private const string EmbeddedHostFormUid = "RM_EMB_RPT";
+        private const string EmbeddedHostTitle = "Generación de Reporte";
 
         public PrincipalScreen(
             Application app,
@@ -152,6 +156,28 @@ namespace ReportManager.Addon.Screens
                     && _reportParameterMapper.IsGenerateReportButton(pVal.ItemUID))
                 {
                     _reportParameterMapper.GenerateSelectedReport(formUID);
+
+                    // NUEVO: incrustar Form1 dentro de SAP (host SAP + SetParent)
+                    try
+                    {
+                        var host = _embeddedRegistry.GetOrCreate(_app, _log, EmbeddedHostFormUid, EmbeddedHostTitle);
+                        host.ShowOrFocus(() => new ReportManager.Addon.Form1(), width: 900, height: 650);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error("No se pudo incrustar Form1.", ex);
+                        _app.StatusBar.SetText("No se pudo incrustar el formulario de reporte: " + ex.Message,
+                            BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
+                    }
+
+                    return;
+                }
+
+                if (formUID == EmbeddedHostFormUid
+                    && pVal.EventType == BoEventTypes.et_FORM_CLOSE
+                    && pVal.BeforeAction)
+                {
+                    _embeddedRegistry.DisposeHost(EmbeddedHostFormUid);
                     return;
                 }
 

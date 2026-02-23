@@ -79,6 +79,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\AddonBootstrap.cs" />
+    <Compile Include="Core\Embedding\EmbeddedWinFormHost.cs" />
+    <Compile Include="Core\Embedding\EmbeddedWinFormRegistry.cs" />
+    <Compile Include="Core\Embedding\SapHostFormFactory.cs" />
+    <Compile Include="Core\Embedding\SapWindowHandles.cs" />
+    <Compile Include="Core\Embedding\Win32Native.cs" />
     <Compile Include="Core\MenuManager.cs" />
     <Compile Include="Core\PrincipalFormController.cs" />
     <Compile Include="Core\SapApplication.cs" />
@@ -98,11 +103,17 @@
     </Compile>
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Models\Metadata.cs" />
+    <Compile Include="Models\PtrInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Screens\PrincipalScreen.cs" />
     <Compile Include="Services\ConfigurationMetadataService.cs" />
     <Compile Include="Services\ReportParameterMapper.cs" />
+    <Compile Include="Services\SapWinFormEmbedder.cs" />
+    <Compile Include="Services\Win32Api.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
