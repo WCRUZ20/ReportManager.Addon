@@ -104,6 +104,12 @@ namespace ReportManager.Addon.Services
                 }
 
                 var parameterDefinitions = GetReportParameters(reportInfo.ReportCode);
+                if (!TryValidateRequiredParameters(form, parameterDefinitions, out var validationMessage))
+                {
+                    _app.StatusBar.SetText(validationMessage, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                    return;
+                }
+
                 var parameterValues = BuildParameterValues(form, parameterDefinitions);
 
                 OpenCrystalViewerOnStaThread(reportFilePath, parameterValues);
@@ -127,6 +133,8 @@ namespace ReportManager.Addon.Services
                 {
                     localReportDocument = new ReportDocument();
                     localReportDocument.Load(reportFilePath);
+                    localReportDocument.SetDatabaseLogon("sa", "S0ls@p1234."); //ESTO LO PODEMOS LEER DESDE UNA TABLA 
+                    //ApplyDatabaseLogin(localReportDocument);
                     ApplyParameters(localReportDocument, parameterValues);
 
                     System.Windows.Forms.Application.Run(new CrystalReportViewerForm(localReportDocument));
@@ -141,6 +149,75 @@ namespace ReportManager.Addon.Services
             viewerThread.IsBackground = true;
             viewerThread.SetApartmentState(ApartmentState.STA);
             viewerThread.Start();
+        }
+
+        private void ApplyDatabaseLogin(ReportDocument reportDocument)
+        {
+            if (reportDocument == null)
+            {
+                return;
+            }
+
+            ApplyDatabaseLoginToTables(reportDocument.Database.Tables);
+
+            foreach (CrystalDecisions.CrystalReports.Engine.Section section in reportDocument.ReportDefinition.Sections)
+            {
+                foreach (ReportObject reportObject in section.ReportObjects)
+                {
+                    if (reportObject is SubreportObject subreport)
+                    {
+                        var subreportDocument = subreport.OpenSubreport(subreport.SubreportName);
+                        ApplyDatabaseLoginToTables(subreportDocument.Database.Tables);
+                    }
+                }
+            }
+        }
+
+        private void ApplyDatabaseLoginToTables(Tables tables)
+        {
+            if (tables == null)
+            {
+                return;
+            }
+
+            foreach (Table table in tables)
+            {
+                var logOnInfo = table.LogOnInfo;
+                logOnInfo.ConnectionInfo.ServerName = _company.Server;
+                logOnInfo.ConnectionInfo.DatabaseName = _company.CompanyDB;
+                logOnInfo.ConnectionInfo.UserID = _company.DbUserName;
+                logOnInfo.ConnectionInfo.Password = _company.DbPassword;
+                logOnInfo.ConnectionInfo.IntegratedSecurity = string.IsNullOrWhiteSpace(_company.DbUserName);
+
+                table.ApplyLogOnInfo(logOnInfo);
+
+                if (!string.IsNullOrWhiteSpace(_company.CompanyDB))
+                {
+                    table.Location = BuildQualifiedTableLocation(table.Location, _company.CompanyDB);
+                }
+            }
+        }
+
+        private static string BuildQualifiedTableLocation(string currentLocation, string databaseName)
+        {
+            if (string.IsNullOrWhiteSpace(currentLocation) || string.IsNullOrWhiteSpace(databaseName))
+            {
+                return currentLocation;
+            }
+
+            var locationParts = currentLocation.Split('.');
+            if (locationParts.Length == 0)
+            {
+                return currentLocation;
+            }
+
+            var tableName = locationParts[locationParts.Length - 1].Trim();
+            if (string.IsNullOrWhiteSpace(tableName))
+            {
+                return currentLocation;
+            }
+
+            return $"{databaseName}.dbo.{tableName}";
         }
 
         private void OpenOrRefreshMappingForm(string parentFormUid, string reportCode, string reportName, List<ReportParameterDefinition> parameters)
@@ -204,6 +281,44 @@ namespace ReportManager.Addon.Services
             }
 
             return values;
+        }
+
+        private bool TryValidateRequiredParameters(Form mappingForm, List<ReportParameterDefinition> definitions, out string validationMessage)
+        {
+            validationMessage = string.Empty;
+            if (mappingForm == null || definitions == null || definitions.Count == 0)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                var definition = definitions[i];
+                if (definition == null || !definition.IsRequired)
+                {
+                    continue;
+                }
+
+                var valueUid = ParametersPrefix + "val_" + i.ToString("00");
+                if (!HasItem(mappingForm, valueUid))
+                {
+                    continue;
+                }
+
+                var value = GetUiValue(mappingForm, valueUid, definition.Type);
+                if (value != null)
+                {
+                    continue;
+                }
+
+                var parameterName = !string.IsNullOrWhiteSpace(definition.Description)
+                    ? definition.Description
+                    : definition.ParamId;
+                validationMessage = $"El parámetro obligatorio '{parameterName}' debe ser diligenciado.";
+                return false;
+            }
+
+            return true;
         }
 
         private object GetUiValue(Form mappingForm, string valueUid, string parameterType)
@@ -595,8 +710,16 @@ namespace ReportManager.Addon.Services
             {
                 var escapedReportCode = reportCode.Replace("'", "''");
                 var query = _company.DbServerType == BoDataServerTypes.dst_HANADB
-                    ? "select \"LineId\", \"U_SS_IDPARAM\", \"U_SS_DSCPARAM\", \"U_SS_TIPO\", \"U_SS_QUERY\", \"U_SS_DESC\", \"U_SS_QUERYD\", \"U_SS_ACTIVO\" from \"@SS_PRM_DET\" where \"Code\" = '{escapedReportCode}' order by \"LineId\""
-                    : $@"select LineId, U_SS_IDPARAM, U_SS_DSCPARAM, U_SS_TIPO, U_SS_QUERY, U_SS_DESC, U_SS_QUERYD, U_SS_ACTIVO from [@SS_PRM_DET] where Code = '{escapedReportCode}' order by LineId";
+                    ? $@"select T1.""LineId"", T1.""U_SS_IDPARAM"", T1.""U_SS_DSCPARAM"", T1.""U_SS_TIPO"", T1.""U_SS_OBLIGA"", T1.""U_SS_QUERY"", T1.""U_SS_DESC"", T1.""U_SS_QUERYD"", T1.""U_SS_ACTIVO""
+                        from ""@SS_PRM_CAB"" T0
+                        inner join ""@SS_PRM_DET"" T1 on T0.""Code"" = T1.""Code""
+                        where T0.""U_SS_IDRPT"" = '{escapedReportCode}'
+                        order by T1.""LineId"""
+                    : $@"select T1.LineId, T1.U_SS_IDPARAM, T1.U_SS_DSCPARAM, T1.U_SS_TIPO, T1.U_SS_OBLIGA, T1.U_SS_QUERY, T1.U_SS_DESC, T1.U_SS_QUERYD, T1.U_SS_ACTIVO
+                        from [@SS_PRM_CAB] T0
+                        inner join [@SS_PRM_DET] T1 on T0.Code = T1.Code
+                        where T0.U_SS_IDRPT = '{escapedReportCode}'
+                        order by T1.LineId";
 
                 recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
                 recordset.DoQuery(query);
@@ -611,6 +734,7 @@ namespace ReportManager.Addon.Services
                             ParamId = Convert.ToString(recordset.Fields.Item("U_SS_IDPARAM").Value),
                             Description = Convert.ToString(recordset.Fields.Item("U_SS_DSCPARAM").Value),
                             Type = Convert.ToString(recordset.Fields.Item("U_SS_TIPO").Value),
+                            IsRequired = string.Equals(Convert.ToString(recordset.Fields.Item("U_SS_OBLIGA").Value), "Y", StringComparison.OrdinalIgnoreCase),
                             Query = Convert.ToString(recordset.Fields.Item("U_SS_QUERY").Value),
                             ShowDescription = string.Equals(Convert.ToString(recordset.Fields.Item("U_SS_DESC").Value), "Y", StringComparison.OrdinalIgnoreCase),
                             DescriptionQuery = Convert.ToString(recordset.Fields.Item("U_SS_QUERYD").Value),
@@ -851,6 +975,7 @@ namespace ReportManager.Addon.Services
             public string ParamId { get; set; }
             public string Description { get; set; }
             public string Type { get; set; }
+            public bool IsRequired { get; set; }
             public string Query { get; set; }
             public bool ShowDescription { get; set; }
             public string DescriptionQuery { get; set; }

@@ -212,7 +212,7 @@ namespace ReportManager.Addon.Screens
                     && (pVal.EventType == BoEventTypes.et_CLICK || pVal.EventType == BoEventTypes.et_DOUBLE_CLICK)
                     && _reportParameterMapper.IsQueryPickerGrid(pVal.ItemUID))
                 {
-                    if (!string.IsNullOrWhiteSpace(pVal.ColUID))
+                    if (pVal.EventType == BoEventTypes.et_CLICK && !string.IsNullOrWhiteSpace(pVal.ColUID) && pVal.Row == -1)
                     {
                         _reportParameterMapper.UpdateQueryPickerSelectedColumn(formUID, pVal.ColUID);
                     }
