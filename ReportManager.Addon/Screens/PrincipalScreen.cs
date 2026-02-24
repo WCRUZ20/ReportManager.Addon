@@ -157,18 +157,18 @@ namespace ReportManager.Addon.Screens
                 {
                     _reportParameterMapper.GenerateSelectedReport(formUID);
 
-                    // NUEVO: incrustar Form1 dentro de SAP (host SAP + SetParent)
-                    try
-                    {
-                        var host = _embeddedRegistry.GetOrCreate(_app, _log, EmbeddedHostFormUid, EmbeddedHostTitle);
-                        host.ShowOrFocus(() => new ReportManager.Addon.Form1(), width: 900, height: 650);
-                    }
-                    catch (Exception ex)
-                    {
-                        _log.Error("No se pudo incrustar Form1.", ex);
-                        _app.StatusBar.SetText("No se pudo incrustar el formulario de reporte: " + ex.Message,
-                            BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
-                    }
+                    //Form Incrustado
+                    //try
+                    //{
+                    //    var host = _embeddedRegistry.GetOrCreate(_app, _log, EmbeddedHostFormUid, EmbeddedHostTitle);
+                    //    host.ShowOrFocus(() => new ReportManager.Addon.Form1(), width: 900, height: 650);
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    _log.Error("No se pudo incrustar Form1.", ex);
+                    //    _app.StatusBar.SetText("No se pudo incrustar el formulario de reporte: " + ex.Message,
+                    //        BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
+                    //}
 
                     return;
                 }
@@ -507,7 +507,7 @@ namespace ReportManager.Addon.Screens
             }
 
             return $@"select T2.U_SS_IDRPT, T2.U_SS_NOMBRPT
-                from join [@SS_PRM_CAB] T2 
+                from [@SS_PRM_CAB] T2 
                 where T2.U_SS_IDDPT = '{departmentCode}'
                 order by 1";
         }
