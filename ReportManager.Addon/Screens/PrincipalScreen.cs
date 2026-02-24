@@ -8,6 +8,7 @@ using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,6 +24,12 @@ namespace ReportManager.Addon.Screens
         public const string OpenConfigMenuId = "RM_MENU_CONFIG";
 
         private const string LoginFormUid = "RM_CFG_LOGIN";
+        private const string ConfigTabUid = "tab_cfg";
+        private const string InitTabPaneUid = "1";
+        private const string InitialDbUserUid = "txt_dbusr";
+        private const string InitialDbPassUid = "txt_dbpwd";
+        private const string InitialLoadSapUid = "chk_ldsap";
+        private const string SaveConfigButtonUid = "btn_save";
         private const string ConfigFormUid = "RM_CFG_FORM";
         private const string DepartmentEditUid = "edt_dpt";
         private const string ReportEditUid = "edt_rpt";
@@ -34,6 +41,7 @@ namespace ReportManager.Addon.Screens
         private readonly ConfigurationMetadataService _configurationMetadataService;
         private readonly ReportParameterMapper _reportParameterMapper;
         private readonly SAPbobsCOM.Company _company;
+        private readonly SrfFormLoader _srfFormLoader;
 
         private const string DepartmentComboUid = "cmb_dpt";
         private const string ReportsGridUid = "grd_rpt";
@@ -57,7 +65,8 @@ namespace ReportManager.Addon.Screens
             PrincipalFormController principalFormController,
             ConfigurationMetadataService configurationMetadataService,
             ReportParameterMapper reportParameterMapper,
-            SAPbobsCOM.Company company)
+            SAPbobsCOM.Company company,
+            SrfFormLoader srfFormLoader)
         {
             _app = app ?? throw new ArgumentNullException(nameof(app));
             _log = log ?? throw new ArgumentNullException(nameof(log));
@@ -65,6 +74,7 @@ namespace ReportManager.Addon.Screens
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
             _reportParameterMapper = reportParameterMapper ?? throw new ArgumentNullException(nameof(reportParameterMapper));
             _company = company ?? throw new ArgumentNullException(nameof(company));
+            _srfFormLoader = srfFormLoader ?? throw new ArgumentNullException(nameof(srfFormLoader));
 
         }
 
@@ -536,25 +546,7 @@ namespace ReportManager.Addon.Screens
                 return;
             }
 
-            var creationParams = (FormCreationParams)_app.CreateObject(BoCreatableObjectType.cot_FormCreationParams);
-            creationParams.UniqueID = LoginFormUid;
-            creationParams.FormType = LoginFormUid;
-            creationParams.BorderStyle = BoFormBorderStyle.fbs_Fixed;
-
-            var form = _app.Forms.AddEx(creationParams);
-            form.Title = "Autenticación Configuración";
-            form.Width = 340;
-            form.Height = 180;
-
-            AddStaticText(form, "lbl_usr", "Usuario", 15, 20, 90);
-            AddEditText(form, "txt_usr", 110, 18, 180, false);
-
-            AddStaticText(form, "lbl_pwd", "Clave", 15, 55, 90);
-            AddEditText(form, "txt_pwd", 110, 53, 180, true);
-
-            AddButton(form, "btn_ok", "Ingresar", 110, 95, 90);
-            AddButton(form, "2", "Cancelar", 210, 95, 80);
-            form.Visible = true;
+            OpenFormFromSrf(LoginFormUid, "ConfigurationLogin.srf");
         }
 
         private void ValidateCredentialsAndOpenConfiguration()
@@ -579,7 +571,12 @@ namespace ReportManager.Addon.Screens
 
         private void OpenConfigurationForm()
         {
-            var existing = TryGetOpenForm(ConfigFormUid);
+            OpenFormFromSrf(ConfigFormUid, "Configuration.srf");
+        }
+
+        private void OpenFormFromSrf(string formUid, string srfName)
+        {
+            var existing = TryGetOpenForm(formUid);
             if (existing != null)
             {
                 existing.Visible = true;
@@ -587,21 +584,15 @@ namespace ReportManager.Addon.Screens
                 return;
             }
 
-            var creationParams = (FormCreationParams)_app.CreateObject(BoCreatableObjectType.cot_FormCreationParams);
-            creationParams.UniqueID = ConfigFormUid;
-            creationParams.FormType = ConfigFormUid;
-            creationParams.BorderStyle = BoFormBorderStyle.fbs_Fixed;
+            var srfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Forms", srfName);
+            _srfFormLoader.LoadFromFile(srfPath);
 
-            var form = _app.Forms.AddEx(creationParams);
-            form.Title = "Configuración ReportManager";
-            form.Width = 460;
-            form.Height = 200;
-
-            AddButton(form, "btn_dpts", "Crear tabla ss_dpts y ss_prmtypes", 20, 30, 190);
-            AddButton(form, "btn_udos", "Crear estructuras y UDO", 220, 30, 200);
-
-            AddStaticText(form, "lbl_inf", "Ejecute primero ss_dpts y luego estructuras maestras.", 20, 70, 400);
-            form.Visible = true;
+            var loadedForm = TryGetOpenForm(formUid);
+            if (loadedForm != null)
+            {
+                loadedForm.Visible = true;
+                loadedForm.Select();
+            }
         }
 
         private Form TryGetOpenForm(string formUid)

@@ -144,6 +144,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Forms\ConfigurationLogin.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Forms\Principal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

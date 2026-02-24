@@ -48,6 +48,7 @@ namespace ReportManager.Addon.Services
             CreateUserTableIfNotExists("SS_CONFG_RM", "Configuración RM", BoUTBTableType.bott_NoObject);
             CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_CLAVE", "Clave", BoFieldTypes.db_Alpha, 100);
             CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_VALOR", "Valor", BoFieldTypes.db_Alpha, 254);
+            _app.StatusBar.SetText("Estructura SS_CONFG_RM validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
         }
 
         private void CreateParameterStructures()

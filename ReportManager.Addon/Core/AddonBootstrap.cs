@@ -57,7 +57,7 @@ namespace ReportManager.Addon.Core
             var principalFormController = new PrincipalFormController(_sap.App, loader, srfPath, PrincipalScreen.FormUid);
             var configMetadataService = new ReportManager.Addon.Services.ConfigurationMetadataService(_sap.App, _log, Globals.rCompany);
             var reportParameterMapper = new ReportParameterMapper(_sap.App, _log, Globals.rCompany);
-            var principal = new PrincipalScreen(_sap.App, _log, principalFormController, configMetadataService, reportParameterMapper, Globals.rCompany);
+            var principal = new PrincipalScreen(_sap.App, _log, principalFormController, configMetadataService, reportParameterMapper, Globals.rCompany, loader);
             principal.WireEvents();
 
             _sap.App.StatusBar.SetText("Add-On ReportManager cargado.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
