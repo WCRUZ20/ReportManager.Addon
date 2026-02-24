@@ -263,6 +263,31 @@ namespace ReportManager.Addon.Screens
                 }
 
                 if (formUID == ConfigFormUid
+                    && pVal.EventType == BoEventTypes.et_GOT_FOCUS
+                    && !pVal.BeforeAction)
+                {
+                    //var form = TryGetOpenForm(FormUid);
+                    //var ItemsCount = form.Items.Count; //abre algo como un form vacio al comienzo, despues un segundo form con los elementos definidos en el xml
+                    //if (form != null && ItemsCount != 0) //por eso valido aqui cuando el # elementos es diferente de 0
+                    //{
+                    //    var configForm = TryGetOpenForm(ConfigFormUid);
+                    //    if (configForm != null)
+                    //    {
+                    //        LoadGeneralConfigurationForm(configForm);
+                    //    }
+
+                    //    return;
+                    //}     
+                    var configForm = TryGetOpenForm(ConfigFormUid);
+                    if (configForm != null)
+                    {
+                        LoadGeneralConfigurationForm(configForm);
+                    }
+
+                    return;
+                }
+
+                if (formUID == ConfigFormUid
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ActionSuccess)
                 {
@@ -580,6 +605,42 @@ namespace ReportManager.Addon.Screens
         private void OpenConfigurationForm()
         {
             OpenFormFromSrf(ConfigFormUid, "Configuration.srf");
+            var configForm = TryGetOpenForm(ConfigFormUid);
+            if (configForm != null)
+            {
+                LoadGeneralConfigurationForm(configForm);
+            }
+        }
+
+        private void LoadGeneralConfigurationForm(Form configForm)
+        {
+            try
+            {
+                configForm.PaneLevel = int.Parse(InitTabPaneUid);
+                var tab = (Folder)configForm.Items.Item(ConfigTabUid).Specific;
+                tab.Select();
+
+                var values = _configurationMetadataService.GetGeneralConfigurationValues();
+
+                var dbUser = values.ContainsKey(InitialDbUserUid) ? values[InitialDbUserUid] : string.Empty;
+                var dbPwd = values.ContainsKey(InitialDbPassUid) ? values[InitialDbPassUid] : string.Empty;
+                var loadSap = values.ContainsKey(InitialLoadSapUid) ? values[InitialLoadSapUid] : "N";
+
+                ((EditText)configForm.Items.Item(InitialDbUserUid).Specific).Value = dbUser;
+                ((EditText)configForm.Items.Item(InitialDbPassUid).Specific).Value = dbPwd;
+
+                var loadSapCheckbox = (CheckBox)configForm.Items.Item(InitialLoadSapUid).Specific;
+                configForm.Items.Item(InitialLoadSapUid).Enabled = true;
+                loadSapCheckbox.Checked = string.Equals(loadSap, loadSapCheckbox.ValOn, StringComparison.OrdinalIgnoreCase);
+
+                Globals.dbuser = dbUser;
+                Globals.pwduser = dbPwd;
+                Globals.chkrptSAP = loadSap;
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo cargar la configuración general en el formulario.", ex);
+            }
         }
 
         private void SaveGeneralConfiguration()

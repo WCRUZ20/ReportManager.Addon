@@ -1,4 +1,5 @@
-﻿using ReportManager.Addon.Logging;
+﻿using ReportManager.Addon.Entidades;
+using ReportManager.Addon.Logging;
 using ReportManager.Addon.Models;
 using SAPbobsCOM;
 using SAPbouiCOM;
@@ -55,6 +56,52 @@ namespace ReportManager.Addon.Services
             CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_CLAVE", "Clave", BoFieldTypes.db_Alpha, 100);
             CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_VALOR", "Valor", BoFieldTypes.db_Alpha, 254);
             _app.StatusBar.SetText("Estructura SS_CONFG_RM validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+        }
+
+        public Dictionary<string, string> GetGeneralConfigurationValues()
+        {
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Recordset recordset = null;
+
+            try
+            {
+                recordset = (Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                var query = _company.DbServerType == BoDataServerTypes.dst_HANADB
+                    ? "SELECT \"U_SS_CLAVE\", \"U_SS_VALOR\" FROM \"@SS_CONFG_RM\""
+                    : "SELECT U_SS_CLAVE, U_SS_VALOR FROM [@SS_CONFG_RM]";
+                recordset.DoQuery(query);
+
+                while (!recordset.EoF)
+                {
+                    var key = Convert.ToString(recordset.Fields.Item("U_SS_CLAVE").Value);
+                    var value = Convert.ToString(recordset.Fields.Item("U_SS_VALOR").Value) ?? string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(key))
+                    {
+                        values[key] = value;
+                    }
+
+                    recordset.MoveNext();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo leer la configuración general desde SS_CONFG_RM.", ex);
+            }
+            finally
+            {
+                ReleaseComObject(recordset);
+            }
+
+            return values;
+        }
+
+        public void LoadGeneralConfigurationGlobals()
+        {
+            var values = GetGeneralConfigurationValues();
+            Globals.dbuser = values.ContainsKey("txt_dbusr") ? values["txt_dbusr"] : string.Empty;
+            Globals.pwduser = values.ContainsKey("txt_dbpwd") ? values["txt_dbpwd"] : string.Empty;
+            Globals.chkrptSAP = values.ContainsKey("chk_ldsap") ? values["chk_ldsap"] : "N";
         }
 
         private void CreateParameterStructures()
