@@ -9,5 +9,8 @@ namespace ReportManager.Addon.Entidades
     class Globals
     {
         public static SAPbobsCOM.Company rCompany { get; set; }
+        public static string dbuser { get; set; }
+        public static string pwduser { get; set; }
+        public static string chkrptSAP { get; set; }
     }
 }

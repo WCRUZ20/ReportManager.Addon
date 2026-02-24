@@ -36,6 +36,12 @@ namespace ReportManager.Addon.Services
             _app.StatusBar.SetText("Estructura SS_PRMTYPE validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
         }
 
+        public void CreateParamterTypeValuesTable()
+        {
+            CreateUserTableIfNotExists("SS_PRMVALUES", "Tipos parámetros", BoUTBTableType.bott_NoObject);
+            _app.StatusBar.SetText("Estructura SS_PRMVALUES validada.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+        }
+
         public void CreateReportConfigurationStructures()
         {
             CreateParameterStructures();
@@ -62,11 +68,12 @@ namespace ReportManager.Addon.Services
             CreateUserTableIfNotExists("SS_PRM_DET", "Parametros Reporte Det", BoUTBTableType.bott_MasterDataLines);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_IDPARAM", "Id Parametro", BoFieldTypes.db_Alpha, 50);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_DSCPARAM", "Desc Parametro", BoFieldTypes.db_Alpha, 50);
-            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_TIPO", "Tipo parámetro", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMTYPE");
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_TIPO", "Tipo dato parámetro", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMTYPE");
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_OBLIGA", "Obligatorio", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_QUERY", "Query", BoFieldTypes.db_Memo, 250);
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_DESC", "Descripción selección", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_QUERYD", "Query descripción", BoFieldTypes.db_Memo, 250);
+            CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_TPPRM", "Tipo parametro", BoFieldTypes.db_Alpha, 50, BoFldSubTypes.st_None, null, null, "SS_PRMVALUES");
             CreateUserFieldIfNotExists("@SS_PRM_DET", "SS_ACTIVO", "Activo", BoFieldTypes.db_Alpha, 1, BoFldSubTypes.st_None, "Y", "N");
 
             var def = new UdoDefinition
@@ -102,12 +109,13 @@ namespace ReportManager.Addon.Services
 
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_IDPARAM", Description = "Id Param", ChildNumber = 1, ColumnNumber = 1 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DSCPARAM", Description = "Descripción", ChildNumber = 1, ColumnNumber = 2 });
-            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_TIPO", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 3 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_TIPO", Description = "Tipo dato parámetro", ChildNumber = 1, ColumnNumber = 3 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_OBLIGA", Description = "Obligatorio", ChildNumber = 1, ColumnNumber = 4 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_QUERY", Description = "Query", ChildNumber = 1, ColumnNumber = 5 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_DESC", Description = "Descripción selección", ChildNumber = 1, ColumnNumber = 6 });
             def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_QUERYD", Description = "Query Descripción", ChildNumber = 1, ColumnNumber = 7 });
-            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 8 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "SS_TPPRM", Description = "Tipo parámetro", ChildNumber = 1, ColumnNumber = 8 });
+            def.EnhancedFormColumns.Add(new UdoEnhancedFormColumn { Alias = "U_SS_ACTIVO", Description = "Activo", ChildNumber = 1, ColumnNumber = 9 });
 
             RegisterUdoIfNotExists(def);
         }

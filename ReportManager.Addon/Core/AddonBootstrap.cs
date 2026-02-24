@@ -26,6 +26,7 @@ namespace ReportManager.Addon.Core
 
         public void Start()
         {
+            _sap.App.StatusBar.SetText("Iniciando Add-On ReportManager....", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
             _log.Info("Iniciando Add-On...");
 
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;

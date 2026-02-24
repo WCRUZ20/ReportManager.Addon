@@ -1,5 +1,6 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
 using CrystalDecisions.Shared;
+using ReportManager.Addon.Entidades;
 using ReportManager.Addon.Forms;
 using ReportManager.Addon.Logging;
 using SAPbobsCOM;
@@ -133,7 +134,7 @@ namespace ReportManager.Addon.Services
                 {
                     localReportDocument = new ReportDocument();
                     localReportDocument.Load(reportFilePath);
-                    localReportDocument.SetDatabaseLogon("sa", "S0ls@p1234."); //ESTO LO PODEMOS LEER DESDE UNA TABLA 
+                    localReportDocument.SetDatabaseLogon(Globals.dbuser, Globals.pwduser); //ESTO LO PODEMOS LEER DESDE UNA TABLA 
                     //ApplyDatabaseLogin(localReportDocument);
                     ApplyParameters(localReportDocument, parameterValues);
 

@@ -271,6 +271,7 @@ namespace ReportManager.Addon.Screens
                         _configurationMetadataService.CreateDepartmentTable();
                         _configurationMetadataService.CreateParamterTypeTable();
                         _configurationMetadataService.CreateGeneralConfigurationTable();
+                        _configurationMetadataService.CreateParamterTypeValuesTable();
                         return;
                     }
 
@@ -279,6 +280,13 @@ namespace ReportManager.Addon.Screens
                         _configurationMetadataService.CreateReportConfigurationStructures();
                         return;
                     }
+
+                    if (pVal.ItemUID == SaveConfigButtonUid)
+                    {
+                        SaveGeneralConfiguration();
+                        return;
+                    }
+
                 }
             }
             catch (Exception ex)
@@ -573,6 +581,81 @@ namespace ReportManager.Addon.Screens
         {
             OpenFormFromSrf(ConfigFormUid, "Configuration.srf");
         }
+
+        private void SaveGeneralConfiguration()
+        {
+            var configForm = TryGetOpenForm(ConfigFormUid);
+            if (configForm == null)
+            {
+                return;
+            }
+
+            var dbUser = ((EditText)configForm.Items.Item(InitialDbUserUid).Specific).Value;
+            var dbPwd = ((EditText)configForm.Items.Item(InitialDbPassUid).Specific).Value;
+            var loadSapCheckbox = (CheckBox)configForm.Items.Item(InitialLoadSapUid).Specific;
+            var loadSap = loadSapCheckbox.Checked ? loadSapCheckbox.ValOn : loadSapCheckbox.ValOff;
+
+            try
+            {
+                _configurationMetadataService.CreateGeneralConfigurationTable(); //se peude validar si la tabla existe, ya no haga esta accion
+
+                UpsertConfigurationValue(InitialDbUserUid, dbUser);
+                Globals.dbuser = dbUser;
+                UpsertConfigurationValue(InitialDbPassUid, dbPwd);
+                Globals.pwduser = dbPwd;
+                UpsertConfigurationValue(InitialLoadSapUid, loadSap);
+                Globals.chkrptSAP = loadSap;
+
+                _app.StatusBar.SetText("Configuración guardada en SS_CONFG_RM.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("No se pudo guardar la configuración general.", ex);
+                _app.StatusBar.SetText("No se pudo guardar la configuración.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
+        }
+
+        private void UpsertConfigurationValue(string key, string value)
+        {
+            var escapedKey = EscapeSqlValue(key);
+            var escapedValue = EscapeSqlValue(value ?? string.Empty);
+
+            var query = _company.DbServerType == BoDataServerTypes.dst_HANADB
+                ? $@"UPSERT ""@SS_CONFG_RM"" (""Code"", ""Name"", ""U_SS_CLAVE"", ""U_SS_VALOR"")
+                    VALUES ('{escapedKey}', '{escapedKey}', '{escapedKey}', '{escapedValue}') WITH PRIMARY KEY"
+                                    : $@"MERGE [@SS_CONFG_RM] AS target
+                    USING (SELECT '{escapedKey}' AS CodeValue, '{escapedValue}' AS DataValue) AS source
+                    ON target.[Code] = source.CodeValue
+                    WHEN MATCHED THEN
+                        UPDATE SET
+                            target.[Name] = source.CodeValue,
+                            target.[U_SS_CLAVE] = source.CodeValue,
+                            target.[U_SS_VALOR] = source.DataValue
+                    WHEN NOT MATCHED THEN
+                        INSERT ([Code], [Name], [U_SS_CLAVE], [U_SS_VALOR])
+                        VALUES (source.CodeValue, source.CodeValue, source.CodeValue, source.DataValue);";
+
+            SAPbobsCOM.Recordset recordset = null;
+
+            try
+            {
+                recordset = (SAPbobsCOM.Recordset)_company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                recordset.DoQuery(query);
+            }
+            finally
+            {
+                if (recordset != null)
+                {
+                    Marshal.ReleaseComObject(recordset);
+                }
+            }
+        }
+
+        private static string EscapeSqlValue(string value)
+        {
+            return (value ?? string.Empty).Replace("'", "''");
+        }
+
 
         private void OpenFormFromSrf(string formUid, string srfName)
         {
