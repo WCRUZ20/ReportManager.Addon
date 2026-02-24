@@ -711,12 +711,12 @@ namespace ReportManager.Addon.Services
             {
                 var escapedReportCode = reportCode.Replace("'", "''");
                 var query = _company.DbServerType == BoDataServerTypes.dst_HANADB
-                    ? $@"select T1.""LineId"", T1.""U_SS_IDPARAM"", T1.""U_SS_DSCPARAM"", T1.""U_SS_TIPO"", T1.""U_SS_OBLIGA"", T1.""U_SS_QUERY"", T1.""U_SS_DESC"", T1.""U_SS_QUERYD"", T1.""U_SS_ACTIVO""
+                    ? $@"select T1.""LineId"", T1.""U_SS_IDPARAM"", T1.""U_SS_DSCPARAM"", T1.""U_SS_TIPO"", T1.""U_SS_OBLIGA"", T1.""U_SS_QUERY"", T1.""U_SS_DESC"", T1.""U_SS_QUERYD"", T1.""U_SS_ACTIVO"", T1.""U_SS_TPPRM""
                         from ""@SS_PRM_CAB"" T0
                         inner join ""@SS_PRM_DET"" T1 on T0.""Code"" = T1.""Code""
                         where T0.""U_SS_IDRPT"" = '{escapedReportCode}'
                         order by T1.""LineId"""
-                    : $@"select T1.LineId, T1.U_SS_IDPARAM, T1.U_SS_DSCPARAM, T1.U_SS_TIPO, T1.U_SS_OBLIGA, T1.U_SS_QUERY, T1.U_SS_DESC, T1.U_SS_QUERYD, T1.U_SS_ACTIVO
+                    : $@"select T1.LineId, T1.U_SS_IDPARAM, T1.U_SS_DSCPARAM, T1.U_SS_TIPO, T1.U_SS_OBLIGA, T1.U_SS_QUERY, T1.U_SS_DESC, T1.U_SS_QUERYD, T1.U_SS_ACTIVO, T1.U_SS_TPPRM
                         from [@SS_PRM_CAB] T0
                         inner join [@SS_PRM_DET] T1 on T0.Code = T1.Code
                         where T0.U_SS_IDRPT = '{escapedReportCode}'
@@ -739,6 +739,7 @@ namespace ReportManager.Addon.Services
                             Query = Convert.ToString(recordset.Fields.Item("U_SS_QUERY").Value),
                             ShowDescription = string.Equals(Convert.ToString(recordset.Fields.Item("U_SS_DESC").Value), "Y", StringComparison.OrdinalIgnoreCase),
                             DescriptionQuery = Convert.ToString(recordset.Fields.Item("U_SS_QUERYD").Value),
+                            multiple = Convert.ToString(recordset.Fields.Item("U_SS_TPPRM").Value)
                         });
                     }
 
@@ -980,6 +981,7 @@ namespace ReportManager.Addon.Services
             public string Query { get; set; }
             public bool ShowDescription { get; set; }
             public string DescriptionQuery { get; set; }
+            public string multiple {  get; set; }
         }
 
         private sealed class QueryPickerContext
