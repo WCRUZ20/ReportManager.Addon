@@ -35,6 +35,7 @@ namespace ReportManager.Addon.Services
         private const int ParameterRowHeight = 24;
         private const int MappingFormMinHeight = 180;
         private const int MappingFormBottomPadding = 72;
+        private const int GenerateButtonVerticalSpacing = 10;
 
         private readonly Application _app;
         private readonly Logger _log;
@@ -245,8 +246,8 @@ namespace ReportManager.Addon.Services
             ((StaticText)headerItem.Specific).Caption = $"Reporte: {reportCode} - {reportName}";
 
             RenderParameters(form, parameters);
-            AddGenerateReportButton(form, parameters.Count);
-            ResizeMappingFormHeight(form, parameters.Count);
+            AddGenerateReportButton(form);
+            ResizeMappingFormHeight(form);
 
             form.Visible = true;
             _mappingFormUid = uid;
@@ -854,17 +855,54 @@ namespace ReportManager.Addon.Services
             }
         }
 
-        private void ResizeMappingFormHeight(Form form, int parameterCount)
+        private void ResizeMappingFormHeight(Form form)
         {
-            var rowsHeight = Math.Max(parameterCount, 1) * ParameterRowHeight;
-            var calculatedHeight = MappingFormBottomPadding + rowsHeight;
+            if (form == null)
+            {
+                return;
+            }
+
+            var lowestBottom = 0;
+            for (int i = 0; i < form.Items.Count; i++)
+            {
+                var item = form.Items.Item(i);
+                var itemBottom = item.Top + item.Height;
+                if (itemBottom > lowestBottom)
+                {
+                    lowestBottom = itemBottom;
+                }
+            }
+
+            var calculatedHeight = lowestBottom + MappingFormBottomPadding;
             form.Height = Math.Max(MappingFormMinHeight, calculatedHeight);
         }
 
-        private void AddGenerateReportButton(Form form, int parameterCount)
+        private void AddGenerateReportButton(Form form)
         {
-            var rowsHeight = Math.Max(parameterCount, 1) * ParameterRowHeight;
-            var buttonTop = 42 + rowsHeight;
+            var buttonTop = 42 + ParameterRowHeight;
+            if (form != null)
+            {
+                var maxParameterBottom = 0;
+                foreach (var context in _parameterContexts.Values.Where(c => !string.IsNullOrWhiteSpace(c?.ValueItemUid)))
+                {
+                    if (!HasItem(form, context.ValueItemUid))
+                    {
+                        continue;
+                    }
+
+                    var valueItem = form.Items.Item(context.ValueItemUid);
+                    var candidateBottom = valueItem.Top + valueItem.Height;
+                    if (candidateBottom > maxParameterBottom)
+                    {
+                        maxParameterBottom = candidateBottom;
+                    }
+                }
+
+                if (maxParameterBottom > 0)
+                {
+                    buttonTop = maxParameterBottom + GenerateButtonVerticalSpacing;
+                }
+            }
 
             var buttonItem = form.Items.Add(GenerateReportButtonUid, BoFormItemTypes.it_BUTTON);
             buttonItem.Left = 400;
