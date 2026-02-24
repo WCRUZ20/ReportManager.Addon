@@ -43,6 +43,13 @@ namespace ReportManager.Addon.Services
             _app.StatusBar.SetText("Estructuras maestras y UDOs validadas.", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
         }
 
+        public void CreateGeneralConfigurationTable()
+        {
+            CreateUserTableIfNotExists("SS_CONFG_RM", "Configuración RM", BoUTBTableType.bott_NoObject);
+            CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_CLAVE", "Clave", BoFieldTypes.db_Alpha, 100);
+            CreateUserFieldIfNotExists("@SS_CONFG_RM", "SS_VALOR", "Valor", BoFieldTypes.db_Alpha, 254);
+        }
+
         private void CreateParameterStructures()
         {
             CreateUserTableIfNotExists("SS_PRM_CAB", "Parametros Reporte Cab", BoUTBTableType.bott_MasterData);

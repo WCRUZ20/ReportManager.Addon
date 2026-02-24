@@ -260,6 +260,7 @@ namespace ReportManager.Addon.Screens
                     {
                         _configurationMetadataService.CreateDepartmentTable();
                         _configurationMetadataService.CreateParamterTypeTable();
+                        _configurationMetadataService.CreateGeneralConfigurationTable();
                         return;
                     }
 
