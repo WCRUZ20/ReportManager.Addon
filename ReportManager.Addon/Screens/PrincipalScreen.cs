@@ -1,4 +1,5 @@
-﻿using ReportManager.Addon.Core;
+﻿using CrystalDecisions.CrystalReports.Engine;
+using ReportManager.Addon.Core;
 using ReportManager.Addon.Core.Embedding;
 using ReportManager.Addon.Entidades;
 using ReportManager.Addon.Logging;
@@ -7,8 +8,8 @@ using SAPbobsCOM;
 using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -170,8 +171,16 @@ namespace ReportManager.Addon.Screens
                     //Form Incrustado
                     //try
                     //{
+                    //    string carpetaBase = @"C:\Reportes SAP\Cobranzas\";
+                    //    string nombreReporte = "COB-002 - ReportePrueba2.rpt";
+
+                    //    string rutaReporte = System.IO.Path.Combine(carpetaBase, nombreReporte);
+
+                    //    ReportDocument _reportDocument = new ReportDocument();
+                    //    _reportDocument.Load(rutaReporte);
+
                     //    var host = _embeddedRegistry.GetOrCreate(_app, _log, EmbeddedHostFormUid, EmbeddedHostTitle);
-                    //    host.ShowOrFocus(() => new ReportManager.Addon.Form1(), width: 900, height: 650);
+                    //    host.ShowOrFocus(() => new ReportManager.Addon.Form1(_reportDocument), width: 900, height: 650);
                     //}
                     //catch (Exception ex)
                     //{
@@ -263,7 +272,7 @@ namespace ReportManager.Addon.Screens
                 }
 
                 if (formUID == ConfigFormUid
-                    && pVal.EventType == BoEventTypes.et_GOT_FOCUS
+                    && pVal.EventType == BoEventTypes.et_FORM_VISIBLE
                     && !pVal.BeforeAction)
                 {
                     //var form = TryGetOpenForm(FormUid);

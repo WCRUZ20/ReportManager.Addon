@@ -17,7 +17,7 @@ namespace ReportManager.Addon
         private readonly ReportDocument _reportDocument;
         private readonly CrystalReportViewer _viewer;
 
-        public Form1()
+        public Form1(ReportDocument reportDocument)
         {
             InitializeComponent();
 
@@ -32,6 +32,33 @@ namespace ReportManager.Addon
 
             Controls.Add(_viewer);
             _viewer.Show();
+            Shown += OnViewerFormShown;
+        }
+
+        private void OnViewerFormShown(object sender, EventArgs e)
+        {
+            // Diferimos el enlace del ReportSource para evitar que el constructor
+            // ejecute lógica pesada y bloquee la creación inicial de la ventana.
+            BeginInvoke((MethodInvoker)(() =>
+            {
+                Cursor = Cursors.WaitCursor;
+                try
+                {
+                    _viewer.ReportSource = _reportDocument;
+                    _viewer.Refresh();
+                }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                }
+            }));
+        }
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            _viewer.ReportSource = null;
+            _reportDocument.Close();
+            _reportDocument.Dispose();
+            base.OnFormClosed(e);
         }
     }
 }
