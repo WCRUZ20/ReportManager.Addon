@@ -41,6 +41,7 @@ namespace ReportManager.Addon.Screens
         private readonly PrincipalFormController _principalFormController;
         private readonly ConfigurationMetadataService _configurationMetadataService;
         private readonly ReportParameterMapper _reportParameterMapper;
+        private readonly PrincipalReportTabParameterMapper _principalReportTabParameterMapper;
         private readonly SAPbobsCOM.Company _company;
         private readonly SrfFormLoader _srfFormLoader;
 
@@ -66,6 +67,7 @@ namespace ReportManager.Addon.Screens
             PrincipalFormController principalFormController,
             ConfigurationMetadataService configurationMetadataService,
             ReportParameterMapper reportParameterMapper,
+            PrincipalReportTabParameterMapper principalReportTabParameterMapper,
             SAPbobsCOM.Company company,
             SrfFormLoader srfFormLoader)
         {
@@ -74,10 +76,12 @@ namespace ReportManager.Addon.Screens
             _principalFormController = principalFormController ?? throw new ArgumentNullException(nameof(principalFormController));
             _configurationMetadataService = configurationMetadataService ?? throw new ArgumentNullException(nameof(configurationMetadataService));
             _reportParameterMapper = reportParameterMapper ?? throw new ArgumentNullException(nameof(reportParameterMapper));
+            _principalReportTabParameterMapper = principalReportTabParameterMapper ?? throw new ArgumentNullException(nameof(principalReportTabParameterMapper));
             _company = company ?? throw new ArgumentNullException(nameof(company));
             _srfFormLoader = srfFormLoader ?? throw new ArgumentNullException(nameof(srfFormLoader));
 
         }
+
 
         public void WireEvents()
         {
@@ -161,6 +165,25 @@ namespace ReportManager.Addon.Screens
                     return;
                 }
 
+                if (formUID == FormUid
+                    && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
+                    && pVal.ActionSuccess
+                    && _principalReportTabParameterMapper.IsParameterButton(pVal.ItemUID))
+                {
+                    _principalReportTabParameterMapper.OpenQuerySelector(formUID, pVal.ItemUID);
+                    return;
+                }
+
+
+                if (formUID == FormUid
+                    && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
+                    && pVal.ActionSuccess
+                    && _principalReportTabParameterMapper.IsGenerateReportButton(pVal.ItemUID))
+                {
+                    _principalReportTabParameterMapper.GenerateSelectedReport(formUID, pVal.ItemUID);
+                    return;
+                }
+
                 if (_reportParameterMapper.IsMappingForm(formUID)
                     && pVal.EventType == BoEventTypes.et_ITEM_PRESSED
                     && pVal.ActionSuccess
@@ -219,8 +242,7 @@ namespace ReportManager.Addon.Screens
                     var form = TryGetOpenForm(FormUid);
                     if (form != null)
                     {
-                        //ShowEmbeddedReportForm(form, pVal.Row);
-                        _reportParameterMapper.ShowFromSelectedReportRow(form, ReportsGridUid, pVal.Row);
+                        _principalReportTabParameterMapper.ShowFromSelectedReportRow(form, pVal.Row);
                     }
 
                     return;
@@ -241,6 +263,16 @@ namespace ReportManager.Addon.Screens
                         _reportParameterMapper.ApplyQuerySelection(formUID, pVal.Row);
                     }
 
+                    return;
+                }
+
+                if (_principalReportTabParameterMapper.IsQueryPickerForm(formUID)
+                    && !pVal.BeforeAction
+                    && pVal.EventType == BoEventTypes.et_DOUBLE_CLICK
+                    && _principalReportTabParameterMapper.IsQueryPickerGrid(pVal.ItemUID)
+                    && pVal.Row >= 0)
+                {
+                    _principalReportTabParameterMapper.ApplyQuerySelection(formUID, pVal.Row);
                     return;
                 }
 
