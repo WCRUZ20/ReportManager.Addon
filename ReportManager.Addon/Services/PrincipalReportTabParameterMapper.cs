@@ -336,6 +336,7 @@ namespace ReportManager.Addon.Services
                     queryButton.Left = 665;
                     queryButton.Top = top;
                     queryButton.Width = 24;
+                    queryButton.Height = valueItem.Height;
                     ((Button)queryButton.Specific).Caption = "...";
 
                     _parameterContextsByButton[buttonUid] = context;
